@@ -1,0 +1,75 @@
+:root {
+  /* 60% Background - Clean white only */
+  --bg-start: #FFFFFF;
+  --bg-end: #FFFFFF;
+
+  /* 30% Surfaces - Pure white cards */
+  --surface: #FFFFFF;
+
+  /* 10% Brand - Keep your original blue colors (or make them more vibrant if you want) */
+  --brand-start: #2563EB;  /* Original blue or change to something bolder */
+  --brand-end: #1E40AF;    /* Original dark blue */
+  --primary: #2563EB;      /* Original primary color */
+
+  /* Text - Higher contrast for white background */
+  --text: #1D1D1F;         /* Darker text for better readability on white */
+  
+  /* Optional: Make expense color more vibrant if you want */
+  --expense: #FF3B30;      /* More vibrant red/orange */
+  
+  /* Stronger shadows for white background */
+  --shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+
+/* Background */
+body {
+  background: linear-gradient(180deg,var(--bg-start),var(--bg-end));
+  color: var(--text);
+}
+
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border); /* Add this for definition */
+}
+
+
+/* Buttons */
+.btn-primary {
+  background: linear-gradient(135deg,var(--brand-start),var(--brand-end));
+  border: none;
+  color: white;
+}
+
+
+.btn-outline-secondary {
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+/* Bottom nav (optional) */
+.bottom-nav {
+  background: #0F172A;
+  color: white;
+}
+
+/* Text */
+.text-muted {
+  color: var(--muted) !important;
+}
+
+* {
+  transition: all .2s ease;
+}
+.dashboard-bg {
+  background: linear-gradient(180deg,var(--bg-start),var(--bg-end));
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
