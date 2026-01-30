@@ -8,6 +8,7 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 const Charts = () => {
   const navigate = useNavigate();
+
   const symbol = getSymbol();
   const [expenses, setExpenses] = useState([]);
   const [user, setUser] = useState(null);
@@ -25,16 +26,35 @@ const Charts = () => {
       return;
     }
 
-    if (!storedExpenses) {
-      navigate("/add-expense");
-      return;
-    }
-
     setUser(JSON.parse(storedUser));
-    setExpenses(JSON.parse(storedExpenses));
+    setExpenses(storedExpenses ? JSON.parse(storedExpenses) : []);
   }, [navigate]);
 
-  if (!user || expenses.length === 0) return null;
+  if (!user) return null;
+
+  if (expenses.length === 0)
+    return (
+      <div className="min-vh-100 dashboard-bg d-flex align-items-center justify-content-center">
+        <div className="text-center empty-state">
+          <div style={{ fontSize: "72px" }}>📊</div>
+
+          <h3 className="mt-3" style={{ color: "var(--primary)" }}>
+            No records yet
+          </h3>
+
+          <p className="text-muted mb-4">
+            Start adding expenses to see your spending insights.
+          </p>
+
+          <button
+            className="btn btn-primary px-4"
+            onClick={() => (window.location.href = "/add-expense")}
+          >
+            Add your first expense
+          </button>
+        </div>
+      </div>
+    );
 
   const income = Number(user.incomeAmount);
 
@@ -46,11 +66,7 @@ const Charts = () => {
   const dataValues = [totalSpent, remainingIncome];
 
   /* Modern palette for chart */
-const backgroundColors = [
-  EXPENSE,
-  PRIMARY
-];
-
+  const backgroundColors = [EXPENSE, PRIMARY];
 
   const chartData = {
     labels,

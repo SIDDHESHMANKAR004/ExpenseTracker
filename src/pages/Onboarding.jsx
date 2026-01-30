@@ -110,108 +110,25 @@ import { useNavigate } from "react-router-dom";
 import {
   GoogleAuthProvider,
   signInWithPopup,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile
 } from "firebase/auth";
 import { auth } from "../firebase";
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const COUNTRIES = [
-    {
-      region: "Asia Pacific",
-      list: [
-        ["India", "+91"],
-        ["China", "+86"],
-        ["Japan", "+81"],
-        ["South Korea", "+82"],
-        ["Singapore", "+65"],
-        ["Malaysia", "+60"],
-        ["Indonesia", "+62"],
-        ["Philippines", "+63"],
-        ["Thailand", "+66"],
-        ["Vietnam", "+84"],
-        ["Australia", "+61"],
-        ["New Zealand", "+64"],
-        ["Hong Kong", "+852"],
-        ["Taiwan", "+886"],
-      ],
-    },
-    {
-      region: "Europe",
-      list: [
-        ["United Kingdom", "+44"],
-        ["Germany", "+49"],
-        ["France", "+33"],
-        ["Italy", "+39"],
-        ["Spain", "+34"],
-        ["Netherlands", "+31"],
-        ["Switzerland", "+41"],
-        ["Sweden", "+46"],
-        ["Norway", "+47"],
-        ["Denmark", "+45"],
-        ["Finland", "+358"],
-        ["Ireland", "+353"],
-        ["Belgium", "+32"],
-        ["Austria", "+43"],
-        ["Portugal", "+351"],
-        ["Greece", "+30"],
-        ["Poland", "+48"],
-        ["Russia", "+7"],
-        ["Turkey", "+90"],
-      ],
-    },
-    {
-      region: "Americas",
-      list: [
-        ["United States", "+1"],
-        ["Canada", "+1"],
-        ["Brazil", "+55"],
-        ["Mexico", "+52"],
-        ["Argentina", "+54"],
-        ["Chile", "+56"],
-        ["Colombia", "+57"],
-        ["Peru", "+51"],
-      ],
-    },
-    {
-      region: "Middle East",
-      list: [
-        ["United Arab Emirates", "+971"],
-        ["Saudi Arabia", "+966"],
-        ["Qatar", "+974"],
-        ["Kuwait", "+965"],
-        ["Oman", "+968"],
-        ["Israel", "+972"],
-      ],
-    },
-    {
-      region: "Africa",
-      list: [
-        ["South Africa", "+27"],
-        ["Nigeria", "+234"],
-        ["Egypt", "+20"],
-        ["Kenya", "+254"],
-        ["Ghana", "+233"],
-        ["Morocco", "+212"],
-      ],
-    },
-    {
-      region: "Other",
-      list: [
-        ["Pakistan", "+92"],
-        ["Bangladesh", "+880"],
-        ["Sri Lanka", "+94"],
-        ["Nepal", "+977"],
-      ],
-    },
-  ];
+  const [mode, setMode] = useState("login"); // login | signup
 
-  const [countryCode, setCountryCode] = useState("+91");
-  const [phone, setPhone] = useState("");
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: ""
+  });
 
-  const [otp, setOtp] = useState("");
-  const [step, setStep] = useState("login"); // login | otp
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
   /* -------- Google Login -------- */
 
@@ -226,133 +143,198 @@ const Onboarding = () => {
         email: res.user.email,
         uid: res.user.uid,
         incomeType: "monthly",
-        incomeAmount: 0,
-      }),
+        incomeAmount: 0
+      })
     );
 
     navigate("/dashboard");
   };
 
-  /* -------- Phone Login -------- */
+  /* -------- Signup -------- */
 
-  const setupRecaptcha = () => {
-  if (window.recaptchaVerifier) return;
+  const signup = async () => {
+    const { name, email, phone, password } = form;
+    if (!name || !email || !password) return alert("Fill all required fields");
 
-  window.recaptchaVerifier = new RecaptchaVerifier(
-    auth,
-    "recaptcha",
-    {
-      size: "invisible",
-    }
-  );
-};
+    const res = await createUserWithEmailAndPassword(auth, email, password);
 
-
-  const sendOTP = async () => {
-    if (!phone) return;
-
-    setupRecaptcha();
-    const appVerifier = window.recaptchaVerifier;
-
-    const result = await signInWithPhoneNumber(
-      auth,
-      countryCode + phone,
-      appVerifier,
-    );
-    window.confirmationResult = result;
-    setStep("otp");
-  };
-
-  const verifyOTP = async () => {
-    const res = await window.confirmationResult.confirm(otp);
+    await updateProfile(res.user, { displayName: name });
 
     localStorage.setItem(
       "user",
       JSON.stringify({
-        name: "User",
-        phone: res.user.phoneNumber,
+        name,
+        email,
+        phone,
         uid: res.user.uid,
         incomeType: "monthly",
-        incomeAmount: 0,
-      }),
+        incomeAmount: 0
+      })
+    );
+
+    setMode("login");
+    alert("Signup successful. Please login.");
+  };
+
+  /* -------- Login -------- */
+
+  const login = async () => {
+    const { email, password } = form;
+    if (!email || !password) return alert("Enter email and password");
+
+    const res = await signInWithEmailAndPassword(auth, email, password);
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify({
+        name: res.user.displayName || "User",
+        email: res.user.email,
+        uid: res.user.uid,
+        incomeType: "monthly",
+        incomeAmount: 0
+      })
     );
 
     navigate("/dashboard");
   };
 
   return (
-    <div className="min-vh-100 dashboard-bg d-flex align-items-center">
+  <div className="min-vh-100 d-flex flex-column">
+
+    {/* ===== TOP BRAND HEADER ===== */}
+    <div
+      style={{
+        height: "35vh",
+        background: "linear-gradient(135deg,var(--brand-start),var(--brand-end))",
+        color: "white",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexDirection: "column",
+        padding: "20px",
+        textAlign: "center"
+      }}
+    >
+      <h2 className="fw-bold mb-1">Expense Tracker</h2>
+      <p className="opacity-75 mb-0">
+        Track smarter. Spend better.
+      </p>
+    </div>
+
+    {/* ===== CENTER CARD ===== */}
+    <div
+      style={{
+        marginTop: "-80px",
+        flex: 1,
+        display: "flex",
+        justifyContent: "center",
+        padding: "0 12px"
+      }}
+    >
       <div className="container" style={{ maxWidth: "420px" }}>
         <div className="card p-4">
-          <h4 className="text-center mb-4" style={{ color: "var(--primary)" }}>
-            Welcome
+
+          <h4 className="text-center mb-3" style={{ color: "var(--primary)" }}>
+            {mode === "login" ? "Login" : "Sign Up"}
           </h4>
 
-          {/* GOOGLE */}
+          {/* Google */}
           <button className="btn btn-primary w-100 mb-3" onClick={loginGoogle}>
             Continue with Google
           </button>
 
           <div className="text-center text-muted mb-3">or</div>
 
-          {/* PHONE */}
-          {step === "login" && (
-            <>
-              <div className="d-flex gap-2 mb-2">
-                <select
-                  className="form-select"
-                  style={{ maxWidth: "140px" }}
-                  value={countryCode}
-                  onChange={(e) => setCountryCode(e.target.value)}
-                >
-                  {COUNTRIES.map((r) => (
-                    <optgroup key={r.region} label={r.region}>
-                      {r.list.map((c) => (
-                        <option key={c[0]} value={c[1]}>
-                          {c[0]} ({c[1]})
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
-
-                <input
-                  className="form-control"
-                  placeholder="Phone number"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-              </div>
-
-              <button
-                className="btn btn-outline-secondary w-100"
-                onClick={sendOTP}
-              >
-                Send OTP
-              </button>
-            </>
-          )}
-
-          {step === "otp" && (
+          {/* Signup Fields */}
+          {mode === "signup" && (
             <>
               <input
                 className="form-control mb-2"
-                placeholder="Enter OTP"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
+                placeholder="John Wick"
+                name="name"
+                onChange={handleChange}
               />
 
-              <button className="btn btn-primary w-100" onClick={verifyOTP}>
-                Verify OTP
-              </button>
+              <input
+                className="form-control mb-2"
+                placeholder="89********"
+                name="phone"
+                onChange={handleChange}
+              />
             </>
           )}
 
-          <div id="recaptcha"></div>
+          {/* Shared Fields */}
+          <input
+            className="form-control mb-2"
+            placeholder="Example@gmail.com"
+            name="email"
+            onChange={handleChange}
+          />
+
+          <input
+            type="password"
+            className="form-control mb-3"
+            placeholder="Password"
+            name="password"
+            onChange={handleChange}
+          />
+
+          {mode === "login" ? (
+            <button className="btn btn-primary w-100" onClick={login}>
+              Login
+            </button>
+          ) : (
+            <button className="btn btn-primary w-100" onClick={signup}>
+              Create Account
+            </button>
+          )}
+
+          {/* Toggle */}
+          <div className="text-center mt-3">
+            {mode === "login" ? (
+              <small>
+                Don’t have an account?{" "}
+                <span
+                  style={{ color: "var(--primary)", cursor: "pointer" }}
+                  onClick={() => setMode("signup")}
+                >
+                  Sign up
+                </span>
+              </small>
+            ) : (
+              <small>
+                Already have an account?{" "}
+                <span
+                  style={{ color: "var(--primary)", cursor: "pointer" }}
+                  onClick={() => setMode("login")}
+                >
+                  Login
+                </span>
+              </small>
+            )}
+          </div>
+
         </div>
       </div>
     </div>
-  );
+
+    {/* ===== BOTTOM FOOTER ===== */}
+    <div
+      style={{
+        textAlign: "center",
+        padding: "14px",
+        fontSize: "12px",
+        color: "var(--muted)"
+      }}
+    >
+      Secure login • Your data stays on your device
+    </div>
+
+  </div>
+);
+
 };
 
 export default Onboarding;
+

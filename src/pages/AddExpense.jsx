@@ -68,7 +68,7 @@ const AddExpense = () => {
 
   const spent = (catName) =>
     expenses
-      .filter((e) => e.category === catName)
+      .filter((e) => e.category === cat.name)
       .reduce((s, e) => s + e.amount, 0);
 
   /* -------- Add Category -------- */
@@ -177,7 +177,7 @@ const AddExpense = () => {
               const exceeded =
                 budgets[cat.name] && spent(cat.name) >= budgets[cat.name];
               return (
-                <div key={cat} className="col-3">
+                <div key={cat.name} className="col-3">
                   <div
                     className="card"
                     style={{

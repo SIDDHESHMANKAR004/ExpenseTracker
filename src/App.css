@@ -73,3 +73,20 @@ body {
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
+
+
+/*chart page css */
+@keyframes floatIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.empty-state {
+  animation: floatIn .6s ease;
+}
