@@ -111,16 +111,107 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   RecaptchaVerifier,
-  signInWithPhoneNumber
+  signInWithPhoneNumber,
 } from "firebase/auth";
 import { auth } from "../firebase";
 
 const Onboarding = () => {
   const navigate = useNavigate();
+  const COUNTRIES = [
+    {
+      region: "Asia Pacific",
+      list: [
+        ["India", "+91"],
+        ["China", "+86"],
+        ["Japan", "+81"],
+        ["South Korea", "+82"],
+        ["Singapore", "+65"],
+        ["Malaysia", "+60"],
+        ["Indonesia", "+62"],
+        ["Philippines", "+63"],
+        ["Thailand", "+66"],
+        ["Vietnam", "+84"],
+        ["Australia", "+61"],
+        ["New Zealand", "+64"],
+        ["Hong Kong", "+852"],
+        ["Taiwan", "+886"],
+      ],
+    },
+    {
+      region: "Europe",
+      list: [
+        ["United Kingdom", "+44"],
+        ["Germany", "+49"],
+        ["France", "+33"],
+        ["Italy", "+39"],
+        ["Spain", "+34"],
+        ["Netherlands", "+31"],
+        ["Switzerland", "+41"],
+        ["Sweden", "+46"],
+        ["Norway", "+47"],
+        ["Denmark", "+45"],
+        ["Finland", "+358"],
+        ["Ireland", "+353"],
+        ["Belgium", "+32"],
+        ["Austria", "+43"],
+        ["Portugal", "+351"],
+        ["Greece", "+30"],
+        ["Poland", "+48"],
+        ["Russia", "+7"],
+        ["Turkey", "+90"],
+      ],
+    },
+    {
+      region: "Americas",
+      list: [
+        ["United States", "+1"],
+        ["Canada", "+1"],
+        ["Brazil", "+55"],
+        ["Mexico", "+52"],
+        ["Argentina", "+54"],
+        ["Chile", "+56"],
+        ["Colombia", "+57"],
+        ["Peru", "+51"],
+      ],
+    },
+    {
+      region: "Middle East",
+      list: [
+        ["United Arab Emirates", "+971"],
+        ["Saudi Arabia", "+966"],
+        ["Qatar", "+974"],
+        ["Kuwait", "+965"],
+        ["Oman", "+968"],
+        ["Israel", "+972"],
+      ],
+    },
+    {
+      region: "Africa",
+      list: [
+        ["South Africa", "+27"],
+        ["Nigeria", "+234"],
+        ["Egypt", "+20"],
+        ["Kenya", "+254"],
+        ["Ghana", "+233"],
+        ["Morocco", "+212"],
+      ],
+    },
+    {
+      region: "Other",
+      list: [
+        ["Pakistan", "+92"],
+        ["Bangladesh", "+880"],
+        ["Sri Lanka", "+94"],
+        ["Nepal", "+977"],
+      ],
+    },
+  ];
 
-  const [phone,setPhone] = useState("");
-  const [otp,setOtp] = useState("");
-  const [step,setStep] = useState("login"); // login | otp
+  const [countryCode, setCountryCode] = useState("+91");
+  const [phone, setPhone] = useState("");
+
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState("login"); // login | otp
 
   /* -------- Google Login -------- */
 
@@ -128,13 +219,16 @@ const Onboarding = () => {
     const provider = new GoogleAuthProvider();
     const res = await signInWithPopup(auth, provider);
 
-    localStorage.setItem("user", JSON.stringify({
-      name: res.user.displayName,
-      email: res.user.email,
-      uid: res.user.uid,
-      incomeType: "monthly",
-      incomeAmount: 0
-    }));
+    localStorage.setItem(
+      "user",
+      JSON.stringify({
+        name: res.user.displayName,
+        email: res.user.email,
+        uid: res.user.uid,
+        incomeType: "monthly",
+        incomeAmount: 0,
+      }),
+    );
 
     navigate("/dashboard");
   };
@@ -142,20 +236,29 @@ const Onboarding = () => {
   /* -------- Phone Login -------- */
 
   const setupRecaptcha = () => {
-    window.recaptchaVerifier = new RecaptchaVerifier(
-      "recaptcha",
-      { size: "invisible" },
-      auth
-    );
-  };
+  if (window.recaptchaVerifier) return;
+
+  window.recaptchaVerifier = new RecaptchaVerifier(
+    auth,
+    "recaptcha",
+    {
+      size: "invisible",
+    }
+  );
+};
+
 
   const sendOTP = async () => {
-    if(!phone) return;
+    if (!phone) return;
 
     setupRecaptcha();
     const appVerifier = window.recaptchaVerifier;
 
-    const result = await signInWithPhoneNumber(auth, phone, appVerifier);
+    const result = await signInWithPhoneNumber(
+      auth,
+      countryCode + phone,
+      appVerifier,
+    );
     window.confirmationResult = result;
     setStep("otp");
   };
@@ -163,24 +266,25 @@ const Onboarding = () => {
   const verifyOTP = async () => {
     const res = await window.confirmationResult.confirm(otp);
 
-    localStorage.setItem("user", JSON.stringify({
-      name: "User",
-      phone: res.user.phoneNumber,
-      uid: res.user.uid,
-      incomeType: "monthly",
-      incomeAmount: 0
-    }));
+    localStorage.setItem(
+      "user",
+      JSON.stringify({
+        name: "User",
+        phone: res.user.phoneNumber,
+        uid: res.user.uid,
+        incomeType: "monthly",
+        incomeAmount: 0,
+      }),
+    );
 
     navigate("/dashboard");
   };
 
   return (
     <div className="min-vh-100 dashboard-bg d-flex align-items-center">
-      <div className="container" style={{maxWidth:"420px"}}>
-
+      <div className="container" style={{ maxWidth: "420px" }}>
         <div className="card p-4">
-
-          <h4 className="text-center mb-4" style={{color:"var(--primary)"}}>
+          <h4 className="text-center mb-4" style={{ color: "var(--primary)" }}>
             Welcome
           </h4>
 
@@ -192,28 +296,50 @@ const Onboarding = () => {
           <div className="text-center text-muted mb-3">or</div>
 
           {/* PHONE */}
-          {step==="login" && (
+          {step === "login" && (
             <>
-              <input
-                className="form-control mb-2"
-                placeholder="+91XXXXXXXXXX"
-                value={phone}
-                onChange={e=>setPhone(e.target.value)}
-              />
+              <div className="d-flex gap-2 mb-2">
+                <select
+                  className="form-select"
+                  style={{ maxWidth: "140px" }}
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                >
+                  {COUNTRIES.map((r) => (
+                    <optgroup key={r.region} label={r.region}>
+                      {r.list.map((c) => (
+                        <option key={c[0]} value={c[1]}>
+                          {c[0]} ({c[1]})
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
 
-              <button className="btn btn-outline-secondary w-100" onClick={sendOTP}>
+                <input
+                  className="form-control"
+                  placeholder="Phone number"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
+
+              <button
+                className="btn btn-outline-secondary w-100"
+                onClick={sendOTP}
+              >
                 Send OTP
               </button>
             </>
           )}
 
-          {step==="otp" && (
+          {step === "otp" && (
             <>
               <input
                 className="form-control mb-2"
                 placeholder="Enter OTP"
                 value={otp}
-                onChange={e=>setOtp(e.target.value)}
+                onChange={(e) => setOtp(e.target.value)}
               />
 
               <button className="btn btn-primary w-100" onClick={verifyOTP}>
@@ -223,7 +349,6 @@ const Onboarding = () => {
           )}
 
           <div id="recaptcha"></div>
-
         </div>
       </div>
     </div>
@@ -231,4 +356,3 @@ const Onboarding = () => {
 };
 
 export default Onboarding;
-
