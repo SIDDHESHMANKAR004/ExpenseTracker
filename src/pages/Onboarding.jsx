@@ -114,11 +114,13 @@ import {
   signInWithEmailAndPassword,
   updateProfile
 } from "firebase/auth";
+
 import { auth } from "../firebase";
+import { saveUser } from "../services/db";
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const [mode, setMode] = useState("login"); // login | signup
+  const [mode, setMode] = useState("login");
 
   const [form, setForm] = useState({
     name: "",
@@ -130,211 +132,133 @@ const Onboarding = () => {
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  /* -------- Google Login -------- */
+  /* ---------- Google Login ---------- */
 
   const loginGoogle = async () => {
     const provider = new GoogleAuthProvider();
     const res = await signInWithPopup(auth, provider);
 
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
-        name: res.user.displayName,
-        email: res.user.email,
-        uid: res.user.uid,
-        incomeType: "monthly",
-        incomeAmount: 0
-      })
-    );
+    await saveUser(res.user.uid, {
+      name: res.user.displayName,
+      email: res.user.email,
+      phone: "",
+      incomeType: "monthly",
+      incomeAmount: 0
+    });
 
+    sessionStorage.setItem("uid", res.user.uid);
     navigate("/dashboard");
   };
 
-  /* -------- Signup -------- */
+  /* ---------- Signup ---------- */
 
   const signup = async () => {
     const { name, email, phone, password } = form;
-    if (!name || !email || !password) return alert("Fill all required fields");
+    if (!name || !email || !password) return alert("Fill required fields");
 
     const res = await createUserWithEmailAndPassword(auth, email, password);
 
     await updateProfile(res.user, { displayName: name });
 
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
-        name,
-        email,
-        phone,
-        uid: res.user.uid,
-        incomeType: "monthly",
-        incomeAmount: 0
-      })
-    );
+    await saveUser(res.user.uid, {
+      name,
+      email,
+      phone,
+      incomeType: "monthly",
+      incomeAmount: 0
+    });
 
+    alert("Account created. Please login.");
     setMode("login");
-    alert("Signup successful. Please login.");
   };
 
-  /* -------- Login -------- */
+  /* ---------- Login ---------- */
 
   const login = async () => {
     const { email, password } = form;
-    if (!email || !password) return alert("Enter email and password");
+    if (!email || !password) return alert("Enter credentials");
 
     const res = await signInWithEmailAndPassword(auth, email, password);
 
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
-        name: res.user.displayName || "User",
-        email: res.user.email,
-        uid: res.user.uid,
-        incomeType: "monthly",
-        incomeAmount: 0
-      })
-    );
-
+    sessionStorage.setItem("uid", res.user.uid);
     navigate("/dashboard");
   };
 
   return (
-  <div className="min-vh-100 d-flex flex-column">
+    <div className="min-vh-100 d-flex flex-column">
 
-    {/* ===== TOP BRAND HEADER ===== */}
-    <div
-      style={{
-        height: "35vh",
-        background: "linear-gradient(135deg,var(--brand-start),var(--brand-end))",
-        color: "white",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "column",
-        padding: "20px",
-        textAlign: "center"
-      }}
-    >
-      <h2 className="fw-bold mb-1">Expense Tracker</h2>
-      <p className="opacity-75 mb-0">
-        Track smarter. Spend better.
-      </p>
-    </div>
+      {/* Header */}
+      <div
+        style={{
+          height: "35vh",
+          background: "linear-gradient(135deg,var(--brand-start),var(--brand-end))",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+        }}
+      >
+        <h2>Expense Tracker</h2>
+        <small>Track smarter. Spend better.</small>
+      </div>
 
-    {/* ===== CENTER CARD ===== */}
-    <div
-      style={{
-        marginTop: "-80px",
-        flex: 1,
-        display: "flex",
-        justifyContent: "center",
-        padding: "0 12px"
-      }}
-    >
-      <div className="container" style={{ maxWidth: "420px" }}>
-        <div className="card p-4">
+      {/* Card */}
+      <div style={{ marginTop: "-80px", flex: 1 }}>
+        <div className="container" style={{ maxWidth: "420px" }}>
+          <div className="card p-4">
 
-          <h4 className="text-center mb-3" style={{ color: "var(--primary)" }}>
-            {mode === "login" ? "Login" : "Sign Up"}
-          </h4>
+            <h4 className="text-center mb-3">
+              {mode === "login" ? "Login" : "Sign Up"}
+            </h4>
 
-          {/* Google */}
-          <button className="btn btn-primary w-100 mb-3" onClick={loginGoogle}>
-            Continue with Google
-          </button>
-
-          <div className="text-center text-muted mb-3">or</div>
-
-          {/* Signup Fields */}
-          {mode === "signup" && (
-            <>
-              <input
-                className="form-control mb-2"
-                placeholder="John Wick"
-                name="name"
-                onChange={handleChange}
-              />
-
-              <input
-                className="form-control mb-2"
-                placeholder="89********"
-                name="phone"
-                onChange={handleChange}
-              />
-            </>
-          )}
-
-          {/* Shared Fields */}
-          <input
-            className="form-control mb-2"
-            placeholder="Example@gmail.com"
-            name="email"
-            onChange={handleChange}
-          />
-
-          <input
-            type="password"
-            className="form-control mb-3"
-            placeholder="Password"
-            name="password"
-            onChange={handleChange}
-          />
-
-          {mode === "login" ? (
-            <button className="btn btn-primary w-100" onClick={login}>
-              Login
+            <button className="btn btn-primary w-100 mb-3" onClick={loginGoogle}>
+              Continue with Google
             </button>
-          ) : (
-            <button className="btn btn-primary w-100" onClick={signup}>
-              Create Account
-            </button>
-          )}
 
-          {/* Toggle */}
-          <div className="text-center mt-3">
-            {mode === "login" ? (
-              <small>
-                Don’t have an account?{" "}
-                <span
-                  style={{ color: "var(--primary)", cursor: "pointer" }}
-                  onClick={() => setMode("signup")}
-                >
-                  Sign up
-                </span>
-              </small>
-            ) : (
-              <small>
-                Already have an account?{" "}
-                <span
-                  style={{ color: "var(--primary)", cursor: "pointer" }}
-                  onClick={() => setMode("login")}
-                >
-                  Login
-                </span>
-              </small>
+            <div className="text-center text-muted mb-3">or</div>
+
+            {mode === "signup" && (
+              <>
+                <input className="form-control mb-2" placeholder="Full Name" name="name" onChange={handleChange} />
+                <input className="form-control mb-2" placeholder="Phone" name="phone" onChange={handleChange} />
+              </>
             )}
-          </div>
 
+            <input className="form-control mb-2" placeholder="Email" name="email" onChange={handleChange} />
+            <input type="password" className="form-control mb-3" placeholder="Password" name="password" onChange={handleChange} />
+
+            {mode === "login" ? (
+              <button className="btn btn-primary w-100" onClick={login}>Login</button>
+            ) : (
+              <button className="btn btn-primary w-100" onClick={signup}>Create Account</button>
+            )}
+
+            <div className="text-center mt-3">
+              {mode === "login" ? (
+                <small>
+                  No account?{" "}
+                  <span style={{ color: "var(--primary)", cursor: "pointer" }} onClick={() => setMode("signup")}>
+                    Sign up
+                  </span>
+                </small>
+              ) : (
+                <small>
+                  Already registered?{" "}
+                  <span style={{ color: "var(--primary)", cursor: "pointer" }} onClick={() => setMode("login")}>
+                    Login
+                  </span>
+                </small>
+              )}
+            </div>
+
+          </div>
         </div>
       </div>
+
+      <div className="text-center text-muted py-2">Secure cloud login</div>
     </div>
-
-    {/* ===== BOTTOM FOOTER ===== */}
-    <div
-      style={{
-        textAlign: "center",
-        padding: "14px",
-        fontSize: "12px",
-        color: "var(--muted)"
-      }}
-    >
-      Secure login • Your data stays on your device
-    </div>
-
-  </div>
-);
-
+  );
 };
 
 export default Onboarding;
-

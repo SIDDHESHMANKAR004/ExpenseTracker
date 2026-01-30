@@ -1,9 +1,9 @@
 import { Navigate } from "react-router-dom";
 
 const ProtectedRoute = ({ children }) => {
-  const user = localStorage.getItem("user");
+  const uid = sessionStorage.getItem("uid");
 
-  if (!user) {
+  if (!uid) {
     return <Navigate to="/onboarding" replace />;
   }
 

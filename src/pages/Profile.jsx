@@ -1,25 +1,60 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getUser, saveUser } from "../services/db";
 
 const Profile = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+
+  const uid = sessionStorage.getItem("uid");
+
   const [user, setUser] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [edit, setEdit] = useState({ name: "", email: "", phone: "" });
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (!storedUser) {
+    if (!uid) {
       navigate("/onboarding");
-    } else {
-      setUser(JSON.parse(storedUser));
+      return;
     }
-  }, [navigate]);
+
+    const load = async () => {
+      // Try to get user from Firebase first
+      const firebaseUser = await getUser(uid);
+      
+      if (firebaseUser) {
+        setUser(firebaseUser);
+        setEdit({
+          name: firebaseUser?.name || "",
+          email: firebaseUser?.email || "",
+          phone: firebaseUser?.phone || "",
+        });
+        // Also update localStorage for offline use
+        localStorage.setItem("user", JSON.stringify(firebaseUser));
+      } else {
+        // Fallback to localStorage if Firebase fails
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+          setEdit({
+            name: parsedUser?.name || "",
+            email: parsedUser?.email || "",
+            phone: parsedUser?.phone || "",
+          });
+        } else {
+          navigate("/onboarding");
+        }
+      }
+    };
+
+    load();
+  }, [uid, navigate]);
 
   if (!user) return null;
 
-  const handleAvatarClick = () => {
-    fileInputRef.current.click();
-  };
+  /* Avatar (still local preview) */
+  const handleAvatarClick = () => fileInputRef.current.click();
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -37,6 +72,27 @@ const Profile = () => {
       localStorage.setItem("user", JSON.stringify(updatedUser));
     };
     reader.readAsDataURL(file);
+  };
+
+  /* Save profile */
+  const saveProfile = async () => {
+    // Save to Firebase
+    await saveUser(uid, edit);
+    
+    // Also update localStorage
+    const updatedUser = { ...user, ...edit };
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    
+    alert("Profile updated");
+    setShowSettings(false);
+  };
+
+  /* Logout */
+  const logout = () => {
+    sessionStorage.clear();
+    localStorage.clear();
+    navigate("/onboarding");
   };
 
   return (
@@ -88,27 +144,75 @@ const Profile = () => {
           onChange={handleImageChange}
         />
 
-        {/* Menu */}
-        <div className="card p-2">
-          <div
-            className="p-3 border-bottom"
-            style={{ cursor: "pointer" }}
-          >
-            👍 Recommend to friends
-          </div>
+        {!showSettings ? (
+          <div className="card p-2">
+            <div
+              className="p-3 border-bottom"
+              style={{ cursor: "pointer" }}
+            >
+              👍 Recommend to friends
+            </div>
 
-          <div
-            className="p-3 border-bottom"
-            style={{ cursor: "pointer" }}
-            onClick={() => navigate("/settings")}
-          >
-            ⚙️ Settings
-          </div>
+            <div
+              className="p-3 border-bottom"
+              style={{ cursor: "pointer" }}
+              onClick={() => setShowSettings(true)}
+            >
+              ⚙️ Settings
+            </div>
 
-          <div className="p-3">
-            📱 Our Other Apps
+            <div
+              className="p-3 border-bottom"
+              style={{ cursor: "pointer" }}
+            >
+              🌐 Our Other Sites 
+            </div>
+
+            <div
+              className="p-3 text-danger"
+              style={{ cursor: "pointer" }}
+              onClick={logout}
+            >
+              🚪 Logout
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="card p-3">
+            <h6>Edit Profile</h6>
+
+            <input
+              className="form-control mb-2"
+              value={edit.name}
+              onChange={(e) => setEdit({ ...edit, name: e.target.value })}
+              placeholder="Name"
+            />
+
+            <input
+              className="form-control mb-2"
+              value={edit.email}
+              onChange={(e) => setEdit({ ...edit, email: e.target.value })}
+              placeholder="Email"
+            />
+
+            <input
+              className="form-control mb-3"
+              value={edit.phone}
+              onChange={(e) => setEdit({ ...edit, phone: e.target.value })}
+              placeholder="Phone"
+            />
+
+            <button className="btn btn-primary w-100 mb-2" onClick={saveProfile}>
+              Save
+            </button>
+
+            <button
+              className="btn btn-outline-secondary w-100"
+              onClick={() => setShowSettings(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
