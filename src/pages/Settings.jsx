@@ -31,7 +31,7 @@ const Settings = () => {
         </div>
         <div
   className="p-3 border-bottom"
-  onClick={() => navigate("/budgets")}
+  onClick={() => navigate("/category-budgets")}
 >
   📊 Category Budgets
 </div>

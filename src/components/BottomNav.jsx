@@ -12,7 +12,7 @@ const BottomNav = () => {
     userSelect: "none",
     WebkitUserSelect: "none",
     textAlign: "center",
-    fontSize: "12px"
+    fontSize: "12px",
   };
 
   const handleNavClick = (e, path) => {
@@ -32,7 +32,7 @@ const BottomNav = () => {
         display: "flex",
         justifyContent: "space-around",
         alignItems: "center",
-        zIndex: 1000
+        zIndex: 1000,
       }}
     >
       {/* Dashboard */}
@@ -59,7 +59,8 @@ const BottomNav = () => {
         style={{
           width: "56px",
           height: "56px",
-          background: "linear-gradient(135deg,var(--brand-start),var(--brand-end))",
+          background:
+            "linear-gradient(135deg,var(--brand-start),var(--brand-end))",
           borderRadius: "50%",
           display: "flex",
           alignItems: "center",
@@ -68,7 +69,7 @@ const BottomNav = () => {
           cursor: "pointer",
           boxShadow: "0 8px 20px rgba(37,99,235,.45)",
           fontSize: "26px",
-          color: "white"
+          color: "white",
         }}
       >
         +

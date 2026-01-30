@@ -10,12 +10,17 @@ import AppLayout from "./components/AppLayout";
 import Settings from "./pages/Settings";
 import UserDetails from "./pages/UserDetails";
 import Currency from "./pages/Currency";
+import CategoryBudgets from "./pages/CategoryBudgets";
+import ScrollToTop from "./components/ScrollToTop";
+// import ExpenseDetails from "./pages/ExpenseDetails";
+// import SelectCategory from "./pages/SelectCategory";
 
 const App = () => {
   const isOnboarded = localStorage.getItem("user");
 
   return (
     <BrowserRouter>
+    <ScrollToTop/>
       <Routes>
         <Route
           path="/"
@@ -127,6 +132,48 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/add"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <AddExpense />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/category-budgets"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <CategoryBudgets />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* <Route
+          path="/select-category"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <SelectCategory />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        /> */}
+
+        {/* <Route
+          path="/expense-details"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <ExpenseDetails />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        /> */}
       </Routes>
     </BrowserRouter>
   );
