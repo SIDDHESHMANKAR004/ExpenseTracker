@@ -5,6 +5,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
 import { getSymbol } from "../utils/currency";
 import { getUser, getExpenses } from "../services/db";
+import Loader from "../components/Loader";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -52,7 +53,7 @@ const Charts = () => {
         <div className="min-vh-100 dashboard-bg d-flex justify-content-center align-items-center">
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">
-              <loader />
+              <Loader />
             </span>
           </div>
         </div>

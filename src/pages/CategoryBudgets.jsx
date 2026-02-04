@@ -60,19 +60,8 @@ const CategoryBudgets = () => {
     await saveBudgets(uid, updatedBudgets);
   };
 
-if (loading) {
-    return (
-      <SwipeWrapper>
-        <div className="min-vh-100 dashboard-bg d-flex justify-content-center align-items-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">
-              <loader />
-            </span>
-          </div>
-        </div>
-      </SwipeWrapper>
-    );
-  }  
+  if (loading) return <Loader />;
+  
 
   return (
     <div className="min-vh-100 dashboard-bg">

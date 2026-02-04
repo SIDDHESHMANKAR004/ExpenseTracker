@@ -44,19 +44,8 @@ const Currency = () => {
     { code: "CNY", symbol: "¥", name: "Chinese Yuan" },
   ];
 
-if (loading) {
-    return (
-      <SwipeWrapper>
-        <div className="min-vh-100 dashboard-bg d-flex justify-content-center align-items-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">
-              <loader />
-            </span>
-          </div>
-        </div>
-      </SwipeWrapper>
-    );
-  }
+  if (loading) return <Loader />;
+
   return (
     <div className="container py-4" style={{ maxWidth: "420px" }}>
       <div className="card p-4">

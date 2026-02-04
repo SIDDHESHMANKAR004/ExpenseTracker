@@ -44,7 +44,7 @@ if (loading) {
         <div className="min-vh-100 dashboard-bg d-flex justify-content-center align-items-center">
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">
-              <loader />
+              <Loader />
             </span>
           </div>
         </div>

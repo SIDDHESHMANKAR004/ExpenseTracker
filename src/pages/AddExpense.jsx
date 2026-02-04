@@ -11,6 +11,7 @@ import {
   getExpenses,
 } from "../services/db";
 import Loader from "../components/Loader";
+import SwipeWrapper from "../components/SwipeWrapper";
 
 const DEFAULT_CATEGORIES = [
   { name: "Food", icon: "🍔", locked: true },
@@ -56,10 +57,7 @@ const AddExpense = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   const [expense, setExpense] = useState({ amount: "", date: "", note: "" });
-  const [income, setIncome] = useState({
-    incomeType: "monthly",
-    incomeAmount: "",
-  });
+  const [income, setIncome] = useState(null);
 
   useEffect(() => {
     if (!uid) {
@@ -68,49 +66,36 @@ const AddExpense = () => {
     }
 
     const load = async () => {
-      try {
-        const user = await getUser(uid);
-        if (user) {
-          setIncome({
-            incomeType: user.incomeType || "monthly",
-            incomeAmount: user.incomeAmount || "",
-          });
-        }
+      const user = await getUser(uid);
 
-        let cats = await getCategories(uid);
-        if (!cats || cats.length === 0) {
-          await saveCategories(uid, DEFAULT_CATEGORIES);
-          cats = DEFAULT_CATEGORIES;
-        }
+      if (!user) {
+        navigate("/onboarding");
+        return;
+      }
 
-        setCategories(cats);
+      setIncome({
+        incomeType: user.incomeType || "monthly",
+        incomeAmount: user.incomeAmount || "",
+      });
 
-        const budgetsData = await getBudgets(uid);
-        if (budgetsData) {
-          setBudgets(budgetsData);
-        }
-
-        const expensesData = await getExpenses(uid);
-        if (expensesData) {
-          setExpenses(expensesData);
-        }
-      } catch (error) {
-        console.error("Error loading data:", error);
-      } finally {
-        setLoading(false);
+      const cats = await getCategories(uid);
+      if (cats) setCategories(cats);
+      else {
+        await saveCategories(uid, DEFAULT_CATEGORIES);
+        setCategories(DEFAULT_CATEGORIES);
       }
     };
 
     load();
   }, [uid, navigate]);
 
-if (loading) {
+  if (loading) {
     return (
       <SwipeWrapper>
         <div className="min-vh-100 dashboard-bg d-flex justify-content-center align-items-center">
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">
-              <loader />
+              <Loader />
             </span>
           </div>
         </div>
@@ -186,17 +171,20 @@ if (loading) {
 
   /* -------- Save Income -------- */
 
-  const saveIncome = async () => {
-    if (!income.incomeAmount) return;
+const saveIncome = async () => {
+  if (!income.incomeAmount || Number(income.incomeAmount) <= 0) {
+    alert("Enter valid income");
+    return;
+  }
 
-    // Save to Firebase only
-    await saveUser(uid, {
-      incomeType: income.incomeType,
-      incomeAmount: Number(income.incomeAmount),
-    });
+  await saveUser(uid, {
+    incomeType: income.incomeType,
+    incomeAmount: Number(income.incomeAmount),
+  });
 
-    navigate("/dashboard");
-  };
+  navigate("/dashboard");
+};
+
 
   return (
     <div className="min-vh-100 dashboard-bg">

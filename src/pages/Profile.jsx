@@ -45,41 +45,17 @@ const Profile = () => {
     load();
   }, [uid, navigate]);
 
-if (loading) {
+  if (loading) {
     return (
       <SwipeWrapper>
         <div className="min-vh-100 dashboard-bg d-flex justify-content-center align-items-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">
-              <loader />
-            </span>
-          </div>
+          <Loader />
         </div>
       </SwipeWrapper>
     );
   }
 
-  /* Avatar */
-  const handleAvatarClick = () => fileInputRef.current.click();
-
-  const handleImageChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file || !file.type.startsWith("image/")) return;
-
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const updated = {
-        ...user,
-        profileImage: reader.result,
-      };
-
-      await saveUser(uid, { profileImage: reader.result });
-      setUser(updated);
-    };
-
-    reader.readAsDataURL(file);
-  };
-
+ 
   /* Save profile */
   const saveProfile = async () => {
     await saveUser(uid, edit);
@@ -95,21 +71,21 @@ if (loading) {
 
   /* Sites list */
   const sites = [
-    { 
-      name: "Ecommerce Site", 
+    {
+      name: "Ecommerce Site",
       url: "https://siddreactapp1.netlify.app/",
-      description: "Ecommerce Site showcase"
+      description: "Ecommerce Site showcase",
     },
-    { 
-      name: "Milk Vendor App", 
+    {
+      name: "Milk Vendor App",
       url: "https://milkvendor.netlify.app/",
-      description: "Dairy management application"
+      description: "Dairy management application",
     },
-    { 
-      name: "Movie App", 
+    {
+      name: "Movie App",
       url: "https://moviereactapp04.netlify.app/",
-      description: "Movie database and search"
-    }
+      description: "Movie database and search",
+    },
   ];
 
   const openSite = (url) => {
@@ -119,7 +95,7 @@ if (loading) {
   /* Share functionality */
   const appLink = window.location.origin; // Gets current website URL
   const shareMessage = `Check out this awesome Expense Tracker app! Track your expenses, set budgets, and manage your finances easily. Try it now: ${appLink}`;
-  
+
   const shareViaWhatsApp = () => {
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
@@ -131,18 +107,21 @@ if (loading) {
   };
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(appLink).then(() => {
-      alert("Link copied to clipboard!");
-    }).catch(() => {
-      // Fallback for older browsers
-      const textArea = document.createElement("textarea");
-      textArea.value = appLink;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textArea);
-      alert("Link copied to clipboard!");
-    });
+    navigator.clipboard
+      .writeText(appLink)
+      .then(() => {
+        alert("Link copied to clipboard!");
+      })
+      .catch(() => {
+        // Fallback for older browsers
+        const textArea = document.createElement("textarea");
+        textArea.value = appLink;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+        alert("Link copied to clipboard!");
+      });
   };
 
   const shareViaEmail = () => {
@@ -168,7 +147,6 @@ if (loading) {
             {/* Header */}
             <div className="card p-3 mb-4 d-flex align-items-center flex-row">
               <div
-                onClick={handleAvatarClick}
                 className="rounded-circle d-flex align-items-center justify-content-center"
                 style={{
                   width: "72px",
@@ -178,15 +156,7 @@ if (loading) {
                   overflow: "hidden",
                 }}
               >
-                {user.profileImage ? (
-                  <img
-                    src={user.profileImage}
-                    alt="Profile"
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                ) : (
-                  <span style={{ fontSize: "32px" }}>👤</span>
-                )}
+                <span style={{ fontSize: "32px" }}>👤</span>
               </div>
 
               <div className="ms-3">
@@ -195,13 +165,7 @@ if (loading) {
               </div>
             </div>
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={handleImageChange}
-            />
+           
 
             {/* PROFILE MENU */}
             {!showSettingsMenu && !showEditProfile ? (
@@ -312,7 +276,10 @@ if (loading) {
                   placeholder="Phone"
                 />
 
-                <button className="btn btn-primary w-100 mb-2" onClick={saveProfile}>
+                <button
+                  className="btn btn-primary w-100 mb-2"
+                  onClick={saveProfile}
+                >
                   Save
                 </button>
 
@@ -333,27 +300,33 @@ if (loading) {
 
       {/* Sites Modal */}
       {showSitesModal && (
-        <div className="modal-backdrop" style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          backgroundColor: "rgba(0,0,0,0.5)",
-          zIndex: 1050,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}>
-          <div className="modal-content" style={{
-            backgroundColor: "white",
-            borderRadius: "12px",
-            width: "90%",
-            maxWidth: "500px",
-            maxHeight: "80vh",
-            overflowY: "auto",
-            padding: "20px",
-          }}>
+        <div
+          className="modal-backdrop"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.5)",
+            zIndex: 1050,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <div
+            className="modal-content"
+            style={{
+              backgroundColor: "white",
+              borderRadius: "12px",
+              width: "90%",
+              maxWidth: "500px",
+              maxHeight: "80vh",
+              overflowY: "auto",
+              padding: "20px",
+            }}
+          >
             <div className="d-flex justify-content-between align-items-center mb-3">
               <h5 className="mb-0">Our Other Sites</h5>
               <button
@@ -364,7 +337,8 @@ if (loading) {
             </div>
 
             <p className="text-muted mb-4">
-              Check out our other applications. Click any site to open in a new tab.
+              Check out our other applications. Click any site to open in a new
+              tab.
             </p>
 
             <div className="sites-list">
@@ -377,7 +351,9 @@ if (loading) {
                 >
                   <div className="card-body">
                     <h6 className="card-title mb-1">{site.name}</h6>
-                    <p className="card-text text-muted small mb-2">{site.description}</p>
+                    <p className="card-text text-muted small mb-2">
+                      {site.description}
+                    </p>
                     <div className="d-flex justify-content-between align-items-center">
                       <small className="text-primary">{site.url}</small>
                       <span className="text-muted">↗</span>
@@ -401,27 +377,33 @@ if (loading) {
 
       {/* Share Modal */}
       {showShareModal && (
-        <div className="modal-backdrop" style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          backgroundColor: "rgba(0,0,0,0.5)",
-          zIndex: 1050,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}>
-          <div className="modal-content" style={{
-            backgroundColor: "white",
-            borderRadius: "12px",
-            width: "90%",
-            maxWidth: "500px",
-            maxHeight: "80vh",
-            overflowY: "auto",
-            padding: "20px",
-          }}>
+        <div
+          className="modal-backdrop"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.5)",
+            zIndex: 1050,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <div
+            className="modal-content"
+            style={{
+              backgroundColor: "white",
+              borderRadius: "12px",
+              width: "90%",
+              maxWidth: "500px",
+              maxHeight: "80vh",
+              overflowY: "auto",
+              padding: "20px",
+            }}
+          >
             <div className="d-flex justify-content-between align-items-center mb-3">
               <h5 className="mb-0">Share with Friends</h5>
               <button
@@ -432,7 +414,8 @@ if (loading) {
             </div>
 
             <p className="text-muted mb-4">
-              Help spread the word! Share this amazing Expense Tracker app with your friends.
+              Help spread the word! Share this amazing Expense Tracker app with
+              your friends.
             </p>
 
             <div className="mb-4">
@@ -459,7 +442,7 @@ if (loading) {
             </div>
 
             <h6 className="mb-3">Share via:</h6>
-            
+
             <div className="row g-3 mb-4">
               <div className="col-6">
                 <button
@@ -467,40 +450,48 @@ if (loading) {
                   onClick={shareViaWhatsApp}
                   style={{ height: "100%" }}
                 >
-                  <span style={{ fontSize: "24px", marginBottom: "8px" }}>📱</span>
+                  <span style={{ fontSize: "24px", marginBottom: "8px" }}>
+                    📱
+                  </span>
                   <span>WhatsApp</span>
                 </button>
               </div>
-              
+
               <div className="col-6">
                 <button
                   className="btn btn-outline-primary w-100 d-flex flex-column align-items-center py-3"
                   onClick={shareViaTelegram}
                   style={{ height: "100%" }}
                 >
-                  <span style={{ fontSize: "24px", marginBottom: "8px" }}>📨</span>
+                  <span style={{ fontSize: "24px", marginBottom: "8px" }}>
+                    📨
+                  </span>
                   <span>Telegram</span>
                 </button>
               </div>
-              
+
               <div className="col-6">
                 <button
                   className="btn btn-outline-secondary w-100 d-flex flex-column align-items-center py-3"
                   onClick={shareViaEmail}
                   style={{ height: "100%" }}
                 >
-                  <span style={{ fontSize: "24px", marginBottom: "8px" }}>✉️</span>
+                  <span style={{ fontSize: "24px", marginBottom: "8px" }}>
+                    ✉️
+                  </span>
                   <span>Email</span>
                 </button>
               </div>
-              
+
               <div className="col-6">
                 <button
                   className="btn btn-outline-info w-100 d-flex flex-column align-items-center py-3"
                   onClick={shareViaSMS}
                   style={{ height: "100%" }}
                 >
-                  <span style={{ fontSize: "24px", marginBottom: "8px" }}>💬</span>
+                  <span style={{ fontSize: "24px", marginBottom: "8px" }}>
+                    💬
+                  </span>
                   <span>SMS</span>
                 </button>
               </div>

@@ -79,13 +79,17 @@ export const getUserMeta = async (uid) => {
   }
   // Return default settings if none exist
   return {
-    currency: "USD",
-    categories: [],
-    budgets: {},
-    incomeType: "monthly",
-    incomeAmount: 0
-  };
+  currency: "USD",
+  categories: [],
+  budgets: {}
 };
 
-export const saveUserMeta = (uid, data) =>
-  setDoc(doc(db, "users", uid, "meta", "settings"), data, { merge: true });
+};
+
+export const saveUserMeta = (uid, data) => {
+  const safe = { ...data };
+  delete safe.incomeAmount;
+  delete safe.incomeType;
+
+  return setDoc(doc(db, "users", uid, "meta", "settings"), safe, { merge: true });
+};
