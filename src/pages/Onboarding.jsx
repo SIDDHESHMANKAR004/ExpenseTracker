@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -6,7 +5,7 @@ import {
   signInWithPopup,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  updateProfile
+  updateProfile,
 } from "firebase/auth";
 
 import { auth } from "../firebase";
@@ -20,7 +19,7 @@ const Onboarding = () => {
     name: "",
     email: "",
     phone: "",
-    password: ""
+    password: "",
   });
 
   const handleChange = (e) =>
@@ -37,7 +36,6 @@ const Onboarding = () => {
       email: res.user.email,
       phone: "",
       incomeType: "monthly",
-      incomeAmount: 0
     });
 
     sessionStorage.setItem("uid", res.user.uid);
@@ -59,7 +57,6 @@ const Onboarding = () => {
       email,
       phone,
       incomeType: "monthly",
-      incomeAmount: 0
     });
 
     alert("Account created. Please login.");
@@ -80,12 +77,12 @@ const Onboarding = () => {
 
   return (
     <div className="min-vh-100 d-flex flex-column">
-
       {/* Header */}
       <div
         style={{
           height: "35vh",
-          background: "linear-gradient(135deg,var(--brand-start),var(--brand-end))",
+          background:
+            "linear-gradient(135deg,var(--brand-start),var(--brand-end))",
           color: "white",
           display: "flex",
           alignItems: "center",
@@ -101,12 +98,14 @@ const Onboarding = () => {
       <div style={{ marginTop: "-80px", flex: 1 }}>
         <div className="container" style={{ maxWidth: "420px" }}>
           <div className="card p-4">
-
             <h4 className="text-center mb-3">
               {mode === "login" ? "Login" : "Sign Up"}
             </h4>
 
-            <button className="btn btn-primary w-100 mb-3" onClick={loginGoogle}>
+            <button
+              className="btn btn-primary w-100 mb-3"
+              onClick={loginGoogle}
+            >
               Continue with Google
             </button>
 
@@ -114,38 +113,68 @@ const Onboarding = () => {
 
             {mode === "signup" && (
               <>
-                <input className="form-control mb-2" placeholder="Full Name" name="name" onChange={handleChange} />
-                <input className="form-control mb-2" placeholder="Phone" name="phone" onChange={handleChange} />
+                <input
+                  className="form-control mb-2"
+                  placeholder="Full Name"
+                  name="name"
+                  onChange={handleChange}
+                />
+                <input
+                  className="form-control mb-2"
+                  placeholder="Phone"
+                  name="phone"
+                  onChange={handleChange}
+                />
               </>
             )}
 
-            <input className="form-control mb-2" placeholder="Email" name="email" onChange={handleChange} />
-            <input type="password" className="form-control mb-3" placeholder="Password" name="password" onChange={handleChange} />
+            <input
+              className="form-control mb-2"
+              placeholder="Email"
+              name="email"
+              onChange={handleChange}
+            />
+            <input
+              type="password"
+              className="form-control mb-3"
+              placeholder="Password"
+              name="password"
+              onChange={handleChange}
+            />
 
             {mode === "login" ? (
-              <button className="btn btn-primary w-100" onClick={login}>Login</button>
+              <button className="btn btn-primary w-100" onClick={login}>
+                Login
+              </button>
             ) : (
-              <button className="btn btn-primary w-100" onClick={signup}>Create Account</button>
+              <button className="btn btn-primary w-100" onClick={signup}>
+                Create Account
+              </button>
             )}
 
             <div className="text-center mt-3">
               {mode === "login" ? (
                 <small>
                   No account?{" "}
-                  <span style={{ color: "var(--primary)", cursor: "pointer" }} onClick={() => setMode("signup")}>
+                  <span
+                    style={{ color: "var(--primary)", cursor: "pointer" }}
+                    onClick={() => setMode("signup")}
+                  >
                     Sign up
                   </span>
                 </small>
               ) : (
                 <small>
                   Already registered?{" "}
-                  <span style={{ color: "var(--primary)", cursor: "pointer" }} onClick={() => setMode("login")}>
+                  <span
+                    style={{ color: "var(--primary)", cursor: "pointer" }}
+                    onClick={() => setMode("login")}
+                  >
                     Login
                   </span>
                 </small>
               )}
             </div>
-
           </div>
         </div>
       </div>

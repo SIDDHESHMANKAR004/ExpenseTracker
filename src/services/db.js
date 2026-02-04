@@ -64,11 +64,15 @@ export const saveBudgets = (uid, budgets) =>
 
 export const getCurrency = async (uid) => {
   const snap = await getDoc(doc(db, "users", uid, "meta", "currency"));
-  return snap.exists() ? snap.data().currency : "USD"; // Default to USD
+  return snap.exists() ? snap.data().currency : "INR"; // Default to USD
 };
 
 export const saveCurrency = (uid, currency) =>
-  setDoc(doc(db, "users", uid, "meta", "currency"), { currency }, { merge: true });
+  setDoc(
+    doc(db, "users", uid, "meta", "currency"),
+    { currency },
+    { merge: true },
+  );
 
 /* ================= COMPLETE USER META DATA ================= */
 
@@ -79,11 +83,10 @@ export const getUserMeta = async (uid) => {
   }
   // Return default settings if none exist
   return {
-  currency: "USD",
-  categories: [],
-  budgets: {}
-};
-
+    currency: "INR",
+    categories: [],
+    budgets: {},
+  };
 };
 
 export const saveUserMeta = (uid, data) => {
@@ -91,5 +94,7 @@ export const saveUserMeta = (uid, data) => {
   delete safe.incomeAmount;
   delete safe.incomeType;
 
-  return setDoc(doc(db, "users", uid, "meta", "settings"), safe, { merge: true });
+  return setDoc(doc(db, "users", uid, "meta", "settings"), safe, {
+    merge: true,
+  });
 };
