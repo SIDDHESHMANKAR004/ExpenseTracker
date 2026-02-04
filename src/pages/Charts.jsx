@@ -1,11 +1,12 @@
 import SwipeWrapper from "../components/SwipeWrapper";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
 import { getSymbol } from "../utils/currency";
 import { getUser, getExpenses } from "../services/db";
 import Loader from "../components/Loader";
+import { haptic } from "../utils/haptics";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -13,6 +14,9 @@ const Charts = () => {
   const navigate = useNavigate();
   const symbol = getSymbol();
   const [loading, setLoading] = useState(true);
+  const chartRef = useRef(null);
+  const [selectedSlice, setSelectedSlice] = useState(null);
+  const [zoomedIn, setZoomedIn] = useState(false);
 
   const [expenses, setExpenses] = useState([]);
   const [user, setUser] = useState(null);
@@ -82,7 +86,10 @@ const Charts = () => {
 
             <button
               className="btn btn-primary px-4"
-              onClick={() => navigate("/add-expense")}
+              onClick={() => {
+                haptic(25);
+                navigate("/add-expense");
+              }}
             >
               Add your first expense
             </button>
@@ -92,43 +99,113 @@ const Charts = () => {
     );
 
   const income = Number(user.incomeAmount || 0);
-
   const totalSpent = expenses.reduce((s, e) => s + Number(e.amount || 0), 0);
   const remainingIncome = Math.max(income - totalSpent, 0);
 
-  const labels = ["Spent", "Remaining"];
-  const dataValues = [totalSpent, remainingIncome];
+  // Group expenses by category for detailed view
+  const categoryTotals = {};
+  expenses.forEach(exp => {
+    const category = exp.category || 'Other';
+    categoryTotals[category] = (categoryTotals[category] || 0) + Number(exp.amount || 0);
+  });
+
+  // Create data for zoomed view (category breakdown)
+  const categoriesData = Object.entries(categoryTotals)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 8); // Top 8 categories
+
+  // Main chart data (Spent vs Remaining)
+  const mainLabels = ["Spent", "Remaining"];
+  const mainDataValues = [totalSpent, remainingIncome];
+  const mainColors = [EXPENSE, PRIMARY];
+
+  // Detailed chart data (Category breakdown)
+  const detailLabels = categoriesData.map(([category]) => category);
+  const detailDataValues = categoriesData.map(([, amount]) => amount);
+  const detailColors = [
+    "#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", 
+    "#9966FF", "#FF9F40", "#8AC926", "#1982C4"
+  ];
+
+  // Determine which data to show
+  const showData = selectedSlice === null 
+    ? { labels: mainLabels, data: mainDataValues, colors: mainColors }
+    : selectedSlice === "Spent"
+    ? { labels: detailLabels, data: detailDataValues, colors: detailColors }
+    : { labels: ["Remaining"], data: [remainingIncome], colors: [PRIMARY] };
 
   const chartData = {
-    labels,
+    labels: showData.labels,
     datasets: [
       {
-        data: dataValues,
-        backgroundColor: [EXPENSE, PRIMARY],
+        data: showData.data,
+        backgroundColor: showData.colors,
         borderWidth: 0,
         borderRadius: 20,
         spacing: 4,
+        hoverOffset: zoomedIn ? 20 : 15,
       },
     ],
   };
 
   const chartOptions = {
     responsive: true,
-    cutout: "70%",
+    cutout: zoomedIn ? "30%" : "70%", // Smaller hole when zoomed
     plugins: {
       legend: {
         position: "bottom",
+        display: !zoomedIn, // Hide legend when zoomed in
       },
       tooltip: {
         callbacks: {
           label: function (context) {
             const value = context.raw;
-            const percentage = income ? ((value / income) * 100).toFixed(1) : 0;
+            let percentage = 0;
+            
+            if (selectedSlice === null) {
+              percentage = income ? ((value / income) * 100).toFixed(1) : 0;
+            } else if (selectedSlice === "Spent") {
+              percentage = totalSpent ? ((value / totalSpent) * 100).toFixed(1) : 0;
+            } else {
+              percentage = remainingIncome ? ((value / remainingIncome) * 100).toFixed(1) : 0;
+            }
+            
             return `${context.label}: ${symbol}${value} (${percentage}%)`;
           },
         },
       },
     },
+    onClick: (event, elements) => {
+      if (elements.length > 0) {
+        const index = elements[0].index;
+        const label = chartData.labels[index];
+        
+        haptic(20);
+        
+        if (!zoomedIn) {
+          // Zoom in
+          setSelectedSlice(label);
+          setZoomedIn(true);
+        } else {
+          // If already zoomed, click again to zoom out
+          setSelectedSlice(null);
+          setZoomedIn(false);
+        }
+      }
+    },
+    onHover: (event, elements) => {
+      if (elements.length > 0) {
+        event.native.target.style.cursor = 'pointer';
+      } else {
+        event.native.target.style.cursor = 'default';
+      }
+    },
+  };
+
+  const handleResetZoom = () => {
+    setSelectedSlice(null);
+    setZoomedIn(false);
+    haptic(15);
   };
 
   return (
@@ -140,8 +217,10 @@ const Charts = () => {
         >
           <div className="card p-4">
             <div className="text-center mb-3">
-              <h4 style={{ color: "var(--primary)" }}>Expense Distribution</h4>
-              <small className="text-muted">Track your budget health</small>
+              <h4 style={{ color: "var(--primary)" }}>
+                {zoomedIn ? `📊 ${selectedSlice} Details` : "Expense Distribution"}
+              </h4>
+            
             </div>
 
             <div className="row text-center my-4">
@@ -155,7 +234,7 @@ const Charts = () => {
 
               <div className="col-4">
                 <div className="text-muted">Spent</div>
-                <div style={{ color: "var(--expense)", fontWeight: 600 }}>
+                <div style={{ color: EXPENSE, fontWeight: 600 }}>
                   {symbol}
                   {totalSpent}
                 </div>
@@ -163,7 +242,7 @@ const Charts = () => {
 
               <div className="col-4">
                 <div className="text-muted">Remaining</div>
-                <div style={{ color: "var(--primary)", fontWeight: 600 }}>
+                <div style={{ color: PRIMARY, fontWeight: 600 }}>
                   {symbol}
                   {remainingIncome}
                 </div>
@@ -172,12 +251,55 @@ const Charts = () => {
 
             <hr />
 
+            {/* Chart Container */}
             <div
-              className="d-flex justify-content-center align-items-center"
-              style={{ height: "min(320px, 70vw)" }}
+              className="d-flex flex-column justify-content-center align-items-center"
+              style={{ height: "min(400px, 70vw)" }}
             >
-              <Doughnut data={chartData} options={chartOptions} />
+              {/* Zoom indicator */}
+             
+
+              {/* The Chart */}
+              <Doughnut 
+                ref={chartRef}
+                data={chartData} 
+                options={chartOptions}
+                style={{ cursor: 'pointer' }}
+              />
+
+              
             </div>
+
+            {/* Category breakdown when viewing "Spent" zoom */}
+            {selectedSlice === "Spent" && zoomedIn && (
+              <div className="mt-4">
+                <h6 className="mb-2">Category Breakdown</h6>
+                <div className="row g-2">
+                  {categoriesData.map(([category, amount], index) => (
+                    <div key={category} className="col-6">
+                      <div className="card p-2 d-flex flex-row align-items-center">
+                        <div 
+                          style={{
+                            width: "12px",
+                            height: "12px",
+                            borderRadius: "50%",
+                            backgroundColor: detailColors[index % detailColors.length],
+                            marginRight: "8px",
+                          }}
+                        />
+                        <div className="flex-grow-1">
+                          <small className="d-block">{category}</small>
+                          <small className="text-muted">
+                            {symbol}{amount} 
+                            ({totalSpent ? ((amount / totalSpent) * 100).toFixed(1) : 0}%)
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

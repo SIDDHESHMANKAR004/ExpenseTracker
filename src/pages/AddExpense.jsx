@@ -194,7 +194,7 @@ const AddExpense = () => {
       amount: Number(expense.amount),
       date: expense.date,
       note: expense.note,
-    createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
     });
 
     navigate("/dashboard");
@@ -232,216 +232,221 @@ const AddExpense = () => {
 
   return (
     <div className="min-vh-100 dashboard-bg">
-      <div
-        className="container py-4"
-        style={{ maxWidth: "720px", paddingBottom: "90px" }}
-      >
-        {/* Tabs */}
-        <div className="card p-2 mb-3 d-flex flex-row">
-          <button
-            className={`flex-fill btn ${tab === "expense" ? "btn-primary" : "btn-outline-secondary"}`}
-            onClick={() => {
-              setTab("expense");
-              setSelectedCategory(null);
-            }}
-          >
-            Expense
-          </button>
-          <button
-            className={`flex-fill btn ${tab === "income" ? "btn-primary" : "btn-outline-secondary"}`}
-            onClick={() => setTab("income")}
-          >
-            Income
-          </button>
-        </div>
-
-        {/* EXPENSE */}
-        {tab === "expense" && !selectedCategory && (
-          <div className="row g-3">
-            {categories.map((cat) => {
-              const exceeded =
-                budgets[cat.name] && spent(cat.name) >= budgets[cat.name];
-              return (
-                <div key={cat.name} className="col-3">
-                  <div
-                    className="card"
-                    style={{
-                      ...TILE,
-                      opacity: exceeded ? 0.4 : 1,
-                      pointerEvents: exceeded ? "none" : "auto",
-                    }}
-                    onClick={() => setSelectedCategory(cat)}
-                    onMouseDown={() => startPress(cat)}
-                    onMouseUp={cancelPress}
-                    onTouchStart={() => startPress(cat)}
-                    onTouchEnd={cancelPress}
-                  >
-                    <div style={{ fontSize: "22px" }}>{cat.icon}</div>
-                    <small>{cat.name}</small>
-
-                    {exceeded && <small className="text-danger">Limit</small>}
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Add */}
-            <div className="col-3">
-              <div
-                style={{
-                  ...TILE,
-                  border: "2px dashed var(--primary)",
-                  borderRadius: "14px",
-                  color: "var(--primary)",
-                }}
-                onClick={addCategory}
-              >
-                ＋<small>Add</small>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Expense Details */}
-        {tab === "expense" && selectedCategory && (
-          <div className="card p-4">
-            <h5 style={{ color: "var(--primary)" }}>
-              {selectedCategory.icon} {selectedCategory.name}
-            </h5>
-
-            <input
-              className="form-control mb-2"
-              placeholder="Amount"
-              onChange={(e) =>
-                setExpense({ ...expense, amount: e.target.value })
-              }
-            />
-            <input
-              type="date"
-              className="form-control mb-2"
-              onChange={(e) => setExpense({ ...expense, date: e.target.value })}
-            />
-            <textarea
-              className="form-control mb-3"
-              placeholder="Note"
-              onChange={(e) => setExpense({ ...expense, note: e.target.value })}
-            />
-
-            <button className="btn btn-primary w-100" onClick={saveExpense}>
-              Save
-            </button>
-          </div>
-        )}
-
-        {/* INCOME */}
-        {tab === "income" && (
-          <div className="card p-4">
-            <h5 style={{ color: "var(--primary)" }}>Update Income</h5>
-
-            <select
-              className="form-select mb-2"
-              value={income.incomeType}
-              onChange={(e) =>
-                setIncome({ ...income, incomeType: e.target.value })
-              }
-            >
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-              <option value="yearly">Yearly</option>
-            </select>
-
-            <input
-              className="form-control mb-3"
-              value={income.incomeAmount}
-              onChange={(e) =>
-                setIncome({ ...income, incomeAmount: e.target.value })
-              }
-            />
-            <button className="btn btn-primary w-100" onClick={saveIncome}>
-              Save Income
-            </button>
-          </div>
-        )}
-
-        {/* Add Category Modal */}
-        {showAddCategoryModal && (
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: "rgba(0,0,0,0.5)",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              zIndex: 1000,
-            }}
-          >
-            <div
-              style={{
-                backgroundColor: "white",
-                borderRadius: "12px",
-                padding: "24px",
-                width: "90%",
-                maxWidth: "400px",
-                boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+      <SwipeWrapper>
+        <div
+          className="container py-4"
+          style={{ maxWidth: "720px", paddingBottom: "90px" }}
+        >
+          {/* Tabs */}
+          <div className="card p-2 mb-3 d-flex flex-row">
+            <button
+              className={`flex-fill btn ${tab === "expense" ? "btn-primary" : "btn-outline-secondary"}`}
+              onClick={() => {
+                setTab("expense");
+                setSelectedCategory(null);
               }}
             >
-              <h5 className="mb-3" style={{ color: "var(--primary)" }}>
-                Add New Category
-              </h5>
+              Expense
+            </button>
+            <button
+              className={`flex-fill btn ${tab === "income" ? "btn-primary" : "btn-outline-secondary"}`}
+              onClick={() => setTab("income")}
+            >
+              Income
+            </button>
+          </div>
 
-              <div className="mb-3">
-                <label className="form-label">Category Name</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="e.g., Coffee, Gym, etc."
-                  value={newCategory.name}
-                  onChange={(e) =>
-                    setNewCategory({ ...newCategory, name: e.target.value })
-                  }
-                  autoFocus
-                />
-              </div>
+          {/* EXPENSE */}
+          {tab === "expense" && !selectedCategory && (
+            <div className="row g-3">
+              {categories.map((cat) => {
+                const exceeded =
+                  budgets[cat.name] && spent(cat.name) >= budgets[cat.name];
+                return (
+                  <div key={cat.name} className="col-3">
+                    <div
+                      className="card"
+                      style={{
+                        ...TILE,
+                        opacity: exceeded ? 0.4 : 1,
+                        pointerEvents: exceeded ? "none" : "auto",
+                      }}
+                      onClick={() => setSelectedCategory(cat)}
+                      onMouseDown={() => startPress(cat)}
+                      onMouseUp={cancelPress}
+                      onTouchStart={() => startPress(cat)}
+                      onTouchEnd={cancelPress}
+                    >
+                      <div style={{ fontSize: "22px" }}>{cat.icon}</div>
+                      <small>{cat.name}</small>
 
-              <div className="mb-4">
-                <label className="form-label">Icon (Emoji)</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="e.g., ☕ 🏋️ 🎬"
-                  value={newCategory.icon}
-                  onChange={(e) =>
-                    setNewCategory({ ...newCategory, icon: e.target.value })
-                  }
-                />
-                
-              </div>
+                      {exceeded && <small className="text-danger">Limit</small>}
+                    </div>
+                  </div>
+                );
+              })}
 
-              <div className="d-flex gap-2">
-                <button
-                  className="btn btn-primary flex-fill"
-                  onClick={saveNewCategory}
-                >
-                  Save Category
-                </button>
-                <button
-                  className="btn btn-outline-secondary"
-                  onClick={() => {
-                    setShowAddCategoryModal(false);
-                    setNewCategory({ name: "", icon: "" });
+              {/* Add */}
+              <div className="col-3">
+                <div
+                  style={{
+                    ...TILE,
+                    border: "2px dashed var(--primary)",
+                    borderRadius: "14px",
+                    color: "var(--primary)",
                   }}
+                  onClick={addCategory}
                 >
-                  Cancel
-                </button>
+                  ＋<small>Add</small>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+
+          {/* Expense Details */}
+          {tab === "expense" && selectedCategory && (
+            <div className="card p-4">
+              <h5 style={{ color: "var(--primary)" }}>
+                {selectedCategory.icon} {selectedCategory.name}
+              </h5>
+
+              <input
+                className="form-control mb-2"
+                placeholder="Amount"
+                onChange={(e) =>
+                  setExpense({ ...expense, amount: e.target.value })
+                }
+              />
+              <input
+                type="date"
+                className="form-control mb-2"
+                onChange={(e) =>
+                  setExpense({ ...expense, date: e.target.value })
+                }
+              />
+              <textarea
+                className="form-control mb-3"
+                placeholder="Note"
+                onChange={(e) =>
+                  setExpense({ ...expense, note: e.target.value })
+                }
+              />
+
+              <button className="btn btn-primary w-100" onClick={saveExpense}>
+                Save
+              </button>
+            </div>
+          )}
+
+          {/* INCOME */}
+          {tab === "income" && (
+            <div className="card p-4">
+              <h5 style={{ color: "var(--primary)" }}>Update Income</h5>
+
+              <select
+                className="form-select mb-2"
+                value={income.incomeType}
+                onChange={(e) =>
+                  setIncome({ ...income, incomeType: e.target.value })
+                }
+              >
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+
+              <input
+                className="form-control mb-3"
+                value={income.incomeAmount}
+                onChange={(e) =>
+                  setIncome({ ...income, incomeAmount: e.target.value })
+                }
+              />
+              <button className="btn btn-primary w-100" onClick={saveIncome}>
+                Save Income
+              </button>
+            </div>
+          )}
+
+          {/* Add Category Modal */}
+          {showAddCategoryModal && (
+            <div
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: "rgba(0,0,0,0.5)",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                zIndex: 1000,
+              }}
+            >
+              <div
+                style={{
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  padding: "24px",
+                  width: "90%",
+                  maxWidth: "400px",
+                  boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+                }}
+              >
+                <h5 className="mb-3" style={{ color: "var(--primary)" }}>
+                  Add New Category
+                </h5>
+
+                <div className="mb-3">
+                  <label className="form-label">Category Name</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g., Coffee, Gym, etc."
+                    value={newCategory.name}
+                    onChange={(e) =>
+                      setNewCategory({ ...newCategory, name: e.target.value })
+                    }
+                    autoFocus
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="form-label">Icon (Emoji)</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g., ☕ 🏋️ 🎬"
+                    value={newCategory.icon}
+                    onChange={(e) =>
+                      setNewCategory({ ...newCategory, icon: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="d-flex gap-2">
+                  <button
+                    className="btn btn-primary flex-fill"
+                    onClick={saveNewCategory}
+                  >
+                    Save Category
+                  </button>
+                  <button
+                    className="btn btn-outline-secondary"
+                    onClick={() => {
+                      setShowAddCategoryModal(false);
+                      setNewCategory({ name: "", icon: "" });
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </SwipeWrapper>
     </div>
   );
 };

@@ -55,7 +55,6 @@ const Profile = () => {
     );
   }
 
- 
   /* Save profile */
   const saveProfile = async () => {
     await saveUser(uid, edit);
@@ -140,16 +139,24 @@ const Profile = () => {
             className="container py-4"
             style={{ maxWidth: "720px", paddingBottom: "90px" }}
           >
-            {/* Header */}
-            <div className="card p-3 mb-4 d-flex align-items-center flex-row">
+            {/* Primary Color Section - 60% */}
+            <div
+              className="card p-3 mb-4 d-flex align-items-center flex-row"
+              style={{
+                background: "linear-gradient(135deg, #2563EB, #1E40AF)",
+                color: "white",
+                border: "none"
+              }}
+            >
               <div
                 className="rounded-circle d-flex align-items-center justify-content-center"
                 style={{
                   width: "72px",
                   height: "72px",
-                  border: "3px solid var(--primary)",
+                  border: "3px solid rgba(255, 255, 255, 0.7)",
                   cursor: "pointer",
                   overflow: "hidden",
+                  background: "rgba(255, 255, 255, 0.2)",
                 }}
               >
                 <span style={{ fontSize: "32px" }}>👤</span>
@@ -157,18 +164,19 @@ const Profile = () => {
 
               <div className="ms-3">
                 <h5 className="mb-0">{user.name}</h5>
-                <small className="text-muted">{user.email}</small>
+                <small style={{ opacity: 0.9 }}>{user.email}</small>
               </div>
             </div>
 
-           
-
-            {/* PROFILE MENU */}
+            {/* Secondary/Neutral Section - 30% */}
             {!showSettingsMenu && !showEditProfile ? (
-              <div className="card p-2">
+              <div className="card p-0">
                 <div
                   className="p-3 border-bottom"
-                  style={{ cursor: "pointer" }}
+                  style={{ 
+                    cursor: "pointer",
+                    borderBottom: "1px solid #e9ecef !important"
+                  }}
                   onClick={() => setShowShareModal(true)}
                 >
                   👍 Recommend to friends
@@ -176,7 +184,10 @@ const Profile = () => {
 
                 <div
                   className="p-3 border-bottom"
-                  style={{ cursor: "pointer" }}
+                  style={{ 
+                    cursor: "pointer",
+                    borderBottom: "1px solid #e9ecef !important"
+                  }}
                   onClick={() => setShowSettingsMenu(true)}
                 >
                   ⚙️ Settings
@@ -184,15 +195,22 @@ const Profile = () => {
 
                 <div
                   className="p-3 border-bottom"
-                  style={{ cursor: "pointer" }}
+                  style={{ 
+                    cursor: "pointer",
+                    borderBottom: "1px solid #e9ecef !important"
+                  }}
                   onClick={() => setShowSitesModal(true)}
                 >
                   🌐 Our Other Sites
                 </div>
 
+                {/* Accent Color - 10% */}
                 <div
-                  className="p-3 text-danger"
-                  style={{ cursor: "pointer" }}
+                  className="p-3"
+                  style={{ 
+                    cursor: "pointer",
+                    color: "var(--expense)"
+                  }}
                   onClick={logout}
                 >
                   🚪 Logout
@@ -200,10 +218,13 @@ const Profile = () => {
               </div>
             ) : showSettingsMenu ? (
               /* SETTINGS MENU */
-              <div className="card p-2">
+              <div className="card p-0">
                 <div
                   className="p-3 border-bottom"
-                  style={{ cursor: "pointer" }}
+                  style={{ 
+                    cursor: "pointer",
+                    borderBottom: "1px solid #e9ecef !important"
+                  }}
                   onClick={() => {
                     setShowSettingsMenu(false);
                     setShowEditProfile(true);
@@ -214,7 +235,10 @@ const Profile = () => {
 
                 <div
                   className="p-3 border-bottom"
-                  style={{ cursor: "pointer" }}
+                  style={{ 
+                    cursor: "pointer",
+                    borderBottom: "1px solid #e9ecef !important"
+                  }}
                   onClick={() => navigate("/currency")}
                 >
                   💱 Currency
@@ -222,7 +246,10 @@ const Profile = () => {
 
                 <div
                   className="p-3 border-bottom"
-                  style={{ cursor: "pointer" }}
+                  style={{ 
+                    cursor: "pointer",
+                    borderBottom: "1px solid #e9ecef !important"
+                  }}
                   onClick={() => navigate("/category-budgets")}
                 >
                   📊 Category Budgets
@@ -272,9 +299,15 @@ const Profile = () => {
                   placeholder="Phone"
                 />
 
+                {/* Accent Color - 10% */}
                 <button
-                  className="btn btn-primary w-100 mb-2"
+                  className="btn w-100 mb-2"
                   onClick={saveProfile}
+                  style={{
+                    background: "var(--primary)",
+                    color: "white",
+                    border: "none"
+                  }}
                 >
                   Save
                 </button>
@@ -323,10 +356,18 @@ const Profile = () => {
               padding: "20px",
             }}
           >
-            <div className="d-flex justify-content-between align-items-center mb-3">
+            {/* Primary Color Header */}
+            <div
+              className="d-flex justify-content-between align-items-center mb-3 p-3 rounded-top"
+              style={{
+                background: "linear-gradient(135deg, #2563EB, #1E40AF)",
+                color: "white",
+                margin: "-20px -20px 20px -20px",
+              }}
+            >
               <h5 className="mb-0">Our Other Sites</h5>
               <button
-                className="btn-close"
+                className="btn-close btn-close-white"
                 onClick={() => setShowSitesModal(false)}
                 aria-label="Close"
               ></button>
@@ -341,17 +382,27 @@ const Profile = () => {
               {sites.map((site, index) => (
                 <div
                   key={index}
-                  className="card mb-3"
-                  style={{ cursor: "pointer" }}
+                  className="card mb-3 border-0 shadow-sm"
+                  style={{ 
+                    cursor: "pointer",
+                    transition: "transform 0.2s",
+                    borderLeft: "4px solid var(--primary)"
+                  }}
                   onClick={() => openSite(site.url)}
+                  onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
+                  onMouseOut={(e) => e.currentTarget.style.transform = "translateY(0)"}
                 >
                   <div className="card-body">
-                    <h6 className="card-title mb-1">{site.name}</h6>
+                    <h6 className="card-title mb-1" style={{ color: "var(--text-primary)" }}>
+                      {site.name}
+                    </h6>
                     <p className="card-text text-muted small mb-2">
                       {site.description}
                     </p>
                     <div className="d-flex justify-content-between align-items-center">
-                      <small className="text-primary">{site.url}</small>
+                      <small className="text-primary" style={{ color: "var(--primary)" }}>
+                        {site.url}
+                      </small>
                       <span className="text-muted">↗</span>
                     </div>
                   </div>
@@ -400,10 +451,18 @@ const Profile = () => {
               padding: "20px",
             }}
           >
-            <div className="d-flex justify-content-between align-items-center mb-3">
+            {/* Primary Color Header */}
+            <div
+              className="d-flex justify-content-between align-items-center mb-3 p-3 rounded-top"
+              style={{
+                background: "linear-gradient(135deg, #2563EB, #1E40AF)",
+                color: "white",
+                margin: "-20px -20px 20px -20px",
+              }}
+            >
               <h5 className="mb-0">Share with Friends</h5>
               <button
-                className="btn-close"
+                className="btn-close btn-close-white"
                 onClick={() => setShowShareModal(false)}
                 aria-label="Close"
               ></button>
@@ -424,10 +483,16 @@ const Profile = () => {
                   readOnly
                   style={{ fontFamily: "monospace", fontSize: "14px" }}
                 />
+                {/* Accent Color Button */}
                 <button
-                  className="btn btn-outline-primary"
+                  className="btn"
                   onClick={copyToClipboard}
                   type="button"
+                  style={{
+                    background: "var(--primary)",
+                    color: "white",
+                    border: "none"
+                  }}
                 >
                   📋 Copy
                 </button>
@@ -437,60 +502,28 @@ const Profile = () => {
               </small>
             </div>
 
-            <h6 className="mb-3">Share via:</h6>
+            <h6 className="mb-3" style={{ color: "var(--text-primary)" }}>Share via:</h6>
 
             <div className="row g-3 mb-4">
-              <div className="col-6">
-                <button
-                  className="btn btn-outline-success w-100 d-flex flex-column align-items-center py-3"
-                  onClick={shareViaWhatsApp}
-                  style={{ height: "100%" }}
-                >
-                  <span style={{ fontSize: "24px", marginBottom: "8px" }}>
-                    📱
-                  </span>
-                  <span>WhatsApp</span>
-                </button>
-              </div>
-
-              <div className="col-6">
-                <button
-                  className="btn btn-outline-primary w-100 d-flex flex-column align-items-center py-3"
-                  onClick={shareViaTelegram}
-                  style={{ height: "100%" }}
-                >
-                  <span style={{ fontSize: "24px", marginBottom: "8px" }}>
-                    📨
-                  </span>
-                  <span>Telegram</span>
-                </button>
-              </div>
-
-              <div className="col-6">
-                <button
-                  className="btn btn-outline-secondary w-100 d-flex flex-column align-items-center py-3"
-                  onClick={shareViaEmail}
-                  style={{ height: "100%" }}
-                >
-                  <span style={{ fontSize: "24px", marginBottom: "8px" }}>
-                    ✉️
-                  </span>
-                  <span>Email</span>
-                </button>
-              </div>
-
-              <div className="col-6">
-                <button
-                  className="btn btn-outline-info w-100 d-flex flex-column align-items-center py-3"
-                  onClick={shareViaSMS}
-                  style={{ height: "100%" }}
-                >
-                  <span style={{ fontSize: "24px", marginBottom: "8px" }}>
-                    💬
-                  </span>
-                  <span>SMS</span>
-                </button>
-              </div>
+              {[
+                { label: "WhatsApp", emoji: "📱", onClick: shareViaWhatsApp, color: "btn-outline-success" },
+                { label: "Telegram", emoji: "📨", onClick: shareViaTelegram, color: "btn-outline-primary" },
+                { label: "Email", emoji: "✉️", onClick: shareViaEmail, color: "btn-outline-secondary" },
+                { label: "SMS", emoji: "💬", onClick: shareViaSMS, color: "btn-outline-info" },
+              ].map((shareOption, index) => (
+                <div key={index} className="col-6">
+                  <button
+                    className={`btn ${shareOption.color} w-100 d-flex flex-column align-items-center py-3`}
+                    onClick={shareOption.onClick}
+                    style={{ height: "100%" }}
+                  >
+                    <span style={{ fontSize: "24px", marginBottom: "8px" }}>
+                      {shareOption.emoji}
+                    </span>
+                    <span>{shareOption.label}</span>
+                  </button>
+                </div>
+              ))}
             </div>
 
             <div className="mt-4 text-center">
