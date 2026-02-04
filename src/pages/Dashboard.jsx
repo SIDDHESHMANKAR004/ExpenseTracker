@@ -82,7 +82,7 @@ const Dashboard = () => {
         >
           {/* Summary Card */}
           <div
-            className="card p-3 mb-3  fixed-top"
+            className=" p-3 mb-3  fixed-top"
             style={{
               background: "linear-gradient(135deg,#2563EB,#1E40AF)",
               color: "white",
