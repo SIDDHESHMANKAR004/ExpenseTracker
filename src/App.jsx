@@ -189,8 +189,6 @@ import Reports from "./pages/Reports";
 import Charts from "./pages/Charts";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AppLayout from "./components/AppLayout";
-import Settings from "./pages/Settings";
-import UserDetails from "./pages/UserDetails";
 import Currency from "./pages/Currency";
 import CategoryBudgets from "./pages/CategoryBudgets";
 import ScrollToTop from "./components/ScrollToTop";
@@ -206,7 +204,11 @@ const App = () => {
         <Route
           path="/"
           element={
-            isOnboarded ? <Navigate to="/dashboard" /> : <Navigate to="/onboarding" />
+            isOnboarded ? (
+              <Navigate to="/dashboard" />
+            ) : (
+              <Navigate to="/onboarding" />
+            )
           }
         />
 
@@ -262,28 +264,6 @@ const App = () => {
             <ProtectedRoute>
               <AppLayout>
                 <AddExpense />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <Settings />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/user-details"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <UserDetails />
               </AppLayout>
             </ProtectedRoute>
           }
