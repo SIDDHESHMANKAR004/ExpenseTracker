@@ -1,3 +1,4 @@
+import { query, orderBy } from "firebase/firestore";
 import { db } from "../firebase";
 import {
   doc,
@@ -24,9 +25,19 @@ export const getUser = async (uid) => {
 export const addExpense = (uid, expense) =>
   addDoc(collection(db, "users", uid, "expenses"), expense);
 
+
 export const getExpenses = async (uid) => {
-  const snap = await getDocs(collection(db, "users", uid, "expenses"));
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const q = query(
+    collection(db, "users", uid, "expenses"),
+    orderBy("createdAt", "desc"),
+  );
+
+  const snap = await getDocs(q);
+
+  return snap.docs.map((d) => ({
+    id: d.id,
+    ...d.data(),
+  }));
 };
 
 export const deleteExpense = (uid, id) =>

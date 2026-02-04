@@ -27,7 +27,12 @@ const Reports = () => {
         const firebaseExpenses = await getExpenses(uid);
         
         setUser(firebaseUser);
-        setExpenses(firebaseExpenses || []);
+         const sorted = (firebaseExpenses || []).sort((a, b) => {
+        if (!a.createdAt || !b.createdAt) return 0;
+        return b.createdAt.seconds - a.createdAt.seconds;
+      });
+
+      setExpenses(sorted);
       } catch (error) {
         console.error("Error loading reports:", error);
       } finally {

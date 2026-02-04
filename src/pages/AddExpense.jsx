@@ -12,6 +12,7 @@ import {
 } from "../services/db";
 import Loader from "../components/Loader";
 import SwipeWrapper from "../components/SwipeWrapper";
+import { serverTimestamp } from "firebase/firestore";
 
 const DEFAULT_CATEGORIES = [
   { name: "Food", icon: "🍔", locked: true },
@@ -55,6 +56,8 @@ const AddExpense = () => {
   const [budgets, setBudgets] = useState({});
   const [expenses, setExpenses] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
+  const [newCategory, setNewCategory] = useState({ name: "", icon: "" });
 
   const [expense, setExpense] = useState({ amount: "", date: "", note: "" });
   const [income, setIncome] = useState(null);
@@ -66,42 +69,46 @@ const AddExpense = () => {
     }
 
     const load = async () => {
-      const user = await getUser(uid);
+      try {
+        const user = await getUser(uid);
 
-      if (!user) {
-        navigate("/onboarding");
-        return;
-      }
+        if (!user) {
+          navigate("/onboarding");
+          return;
+        }
 
-      setIncome({
-        incomeType: user.incomeType || "monthly",
-        incomeAmount: user.incomeAmount || "",
-      });
+        setIncome({
+          incomeType: user.incomeType || "monthly",
+          incomeAmount: user.incomeAmount || "",
+        });
 
-      const cats = await getCategories(uid);
-      if (cats) setCategories(cats);
-      else {
-        await saveCategories(uid, DEFAULT_CATEGORIES);
-        setCategories(DEFAULT_CATEGORIES);
+        const cats = await getCategories(uid);
+        if (cats) setCategories(cats);
+        else {
+          await saveCategories(uid, DEFAULT_CATEGORIES);
+          setCategories(DEFAULT_CATEGORIES);
+        }
+
+        // Load budgets and expenses for budget calculation
+        const budgetData = await getBudgets(uid);
+        if (budgetData) {
+          setBudgets(budgetData);
+        }
+
+        const expenseData = await getExpenses(uid);
+        if (expenseData) {
+          setExpenses(expenseData);
+        }
+      } catch (error) {
+        console.error("Error loading:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     load();
   }, [uid, navigate]);
 
-  if (loading) {
-    return (
-      <SwipeWrapper>
-        <div className="min-vh-100 dashboard-bg d-flex justify-content-center align-items-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">
-              <Loader />
-            </span>
-          </div>
-        </div>
-      </SwipeWrapper>
-    );
-  }
   // Helper function to calculate spent amount for a category
   const spent = (catName) => {
     return expenses
@@ -111,20 +118,43 @@ const AddExpense = () => {
 
   /* -------- Add Category -------- */
 
-  const addCategory = async () => {
-    const name = prompt("Category name");
-    if (!name) return;
+  // const addCategory = async () => {
+  //   const name = prompt("Category name");
+  //   if (!name) return;
 
-    const icon = prompt("Enter emoji (example: 🍕 🚗 🎮)");
-    if (!icon) return;
+  //   const icon = prompt("Enter emoji (example: 🍕 🚗 🎮)");
+  //   if (!icon) return;
 
-    const updated = [...categories, { name, icon, locked: false }];
-    setCategories(updated);
+  //   const updated = [...categories, { name, icon, locked: false }];
+  //   setCategories(updated);
 
-    // Save to Firebase only
-    await saveCategories(uid, updated);
+  //   // Save to Firebase only
+  //   await saveCategories(uid, updated);
+  // };
+  const addCategory = () => {
+    setShowAddCategoryModal(true);
+    setNewCategory({ name: "", icon: "" });
   };
+  const saveNewCategory = async () => {
+    if (!newCategory.name.trim() || !newCategory.icon.trim()) {
+      alert("Please enter both category name and emoji");
+      return;
+    }
 
+    const updated = [
+      ...categories,
+      {
+        name: newCategory.name.trim(),
+        icon: newCategory.icon.trim(),
+        locked: false,
+      },
+    ];
+
+    setCategories(updated);
+    await saveCategories(uid, updated);
+    setShowAddCategoryModal(false);
+    setNewCategory({ name: "", icon: "" });
+  };
   /* -------- Long press delete -------- */
 
   const startPress = (cat) => {
@@ -164,6 +194,7 @@ const AddExpense = () => {
       amount: Number(expense.amount),
       date: expense.date,
       note: expense.note,
+    createdAt: serverTimestamp()
     });
 
     navigate("/dashboard");
@@ -171,20 +202,33 @@ const AddExpense = () => {
 
   /* -------- Save Income -------- */
 
-const saveIncome = async () => {
-  if (!income.incomeAmount || Number(income.incomeAmount) <= 0) {
-    alert("Enter valid income");
-    return;
+  const saveIncome = async () => {
+    if (!income.incomeAmount || Number(income.incomeAmount) <= 0) {
+      alert("Enter valid income");
+      return;
+    }
+
+    await saveUser(uid, {
+      incomeType: income.incomeType,
+      incomeAmount: Number(income.incomeAmount),
+    });
+
+    navigate("/dashboard");
+  };
+
+  if (loading) {
+    return (
+      <SwipeWrapper>
+        <div className="min-vh-100 dashboard-bg d-flex justify-content-center align-items-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">
+              <Loader />
+            </span>
+          </div>
+        </div>
+      </SwipeWrapper>
+    );
   }
-
-  await saveUser(uid, {
-    incomeType: income.incomeType,
-    incomeAmount: Number(income.incomeAmount),
-  });
-
-  navigate("/dashboard");
-};
-
 
   return (
     <div className="min-vh-100 dashboard-bg">
@@ -316,6 +360,85 @@ const saveIncome = async () => {
             <button className="btn btn-primary w-100" onClick={saveIncome}>
               Save Income
             </button>
+          </div>
+        )}
+
+        {/* Add Category Modal */}
+        {showAddCategoryModal && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0,0,0,0.5)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 1000,
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: "white",
+                borderRadius: "12px",
+                padding: "24px",
+                width: "90%",
+                maxWidth: "400px",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+              }}
+            >
+              <h5 className="mb-3" style={{ color: "var(--primary)" }}>
+                Add New Category
+              </h5>
+
+              <div className="mb-3">
+                <label className="form-label">Category Name</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="e.g., Coffee, Gym, etc."
+                  value={newCategory.name}
+                  onChange={(e) =>
+                    setNewCategory({ ...newCategory, name: e.target.value })
+                  }
+                  autoFocus
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="form-label">Icon (Emoji)</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="e.g., ☕ 🏋️ 🎬"
+                  value={newCategory.icon}
+                  onChange={(e) =>
+                    setNewCategory({ ...newCategory, icon: e.target.value })
+                  }
+                />
+                
+              </div>
+
+              <div className="d-flex gap-2">
+                <button
+                  className="btn btn-primary flex-fill"
+                  onClick={saveNewCategory}
+                >
+                  Save Category
+                </button>
+                <button
+                  className="btn btn-outline-secondary"
+                  onClick={() => {
+                    setShowAddCategoryModal(false);
+                    setNewCategory({ name: "", icon: "" });
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

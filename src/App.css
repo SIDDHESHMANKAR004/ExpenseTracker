@@ -90,3 +90,42 @@ body {
 .empty-state {
   animation: floatIn .6s ease;
 }
+
+/* For smooth animations */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Glass effect enhancement */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 4px 32px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+/* Responsive adjustments */
+@media (max-width: 360px) {
+  .bottom-nav-item {
+    padding: 6px 8px !important;
+  }
+  
+  .center-button {
+    width: 56px !important;
+    height: 56px !important;
+    font-size: 24px !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .bottom-nav-container {
+    max-width: 400px;
+    margin: 0 auto;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 32px;
+  }
+}
