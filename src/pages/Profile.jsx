@@ -76,11 +76,7 @@ const Profile = () => {
       url: "https://siddreactapp1.netlify.app/",
       description: "Ecommerce Site showcase",
     },
-    {
-      name: "Milk Vendor App",
-      url: "https://milkvendor.netlify.app/",
-      description: "Dairy management application",
-    },
+   
     {
       name: "Movie App",
       url: "https://moviereactapp04.netlify.app/",
