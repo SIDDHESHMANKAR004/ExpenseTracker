@@ -77,7 +77,7 @@ const Dashboard = () => {
     <SwipeWrapper>
       <div className="min-vh-100  dashboard-bg" style={{ paddingTop: "72px" }}>
         <div
-          className="container py-3"
+          className="container py-4"
           style={{ maxWidth: "720px", paddingBottom: "90px" }}
         >
           {/* Summary Card */}
