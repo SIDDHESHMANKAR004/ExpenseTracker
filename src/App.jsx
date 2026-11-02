@@ -1,9 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import LandingPage from "./pages/LandingPage";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import AddExpense from "./pages/AddExpense";
-import Reports from "./pages/Reports";
 import Charts from "./pages/Charts";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AppLayout from "./components/AppLayout";
@@ -19,14 +19,13 @@ const App = () => {
       <ScrollToTop />
 
       <Routes>
+        {/* Public marketing homepage. Logged-in users skip straight to the
+            dashboard; everyone else sees the real landing page instead of
+            being bounced straight to onboarding. */}
         <Route
           path="/"
           element={
-            isOnboarded ? (
-              <Navigate to="/dashboard" />
-            ) : (
-              <Navigate to="/onboarding" />
-            )
+            isOnboarded ? <Navigate to="/dashboard" /> : <LandingPage />
           }
         />
 
@@ -54,16 +53,7 @@ const App = () => {
           }
         />
 
-        <Route
-          path="/reports"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <Reports />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
+       
 
         <Route
           path="/profile"
@@ -108,6 +98,8 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

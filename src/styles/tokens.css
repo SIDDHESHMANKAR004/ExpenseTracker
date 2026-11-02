@@ -1,0 +1,49 @@
+/* ==========================================================================
+   DESIGN TOKENS — "Ledger" system
+   A financial-ledger aesthetic: ruled hairlines, tabular mono numerals for
+   money, ink-on-paper contrast. Palette is matched to the live app
+   (income = emerald, expense = coral, balance = indigo) so the marketing
+   site reads as the same product, not a themed wrapper around it.
+   ========================================================================== */
+
+:root {
+  /* ---- Color: 6 named values ---- */
+  --ink: #0b1120;           /* primary text / dark surfaces */
+  --paper: #f7f7f4;         /* page background, "paper" */
+  --paper-raised: #ffffff;  /* card surfaces */
+  --income: #0f9d74;        /* emerald — income / positive */
+  --expense: #e8524b;       /* coral — expense / negative */
+  --balance: #4f5fe8;       /* indigo — balance / primary action */
+  --alert: #c9a227;         /* gold — budget alerts */
+  --slate: #5b6472;         /* secondary text */
+  --rule: #dcdad2;          /* hairline ledger rules */
+  --rule-strong: #c7c4b8;
+
+  /* ---- Type ---- */
+  --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Menlo, monospace;
+
+  /* ---- Scale ---- */
+  --step--1: clamp(0.83rem, 0.8rem + 0.1vw, 0.9rem);
+  --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+  --step-1: clamp(1.25rem, 1.15rem + 0.4vw, 1.5rem);
+  --step-2: clamp(1.6rem, 1.4rem + 0.8vw, 2.1rem);
+  --step-3: clamp(2.1rem, 1.7rem + 1.6vw, 3.2rem);
+  --step-4: clamp(2.8rem, 2.1rem + 2.8vw, 4.6rem);
+
+  /* ---- Layout ---- */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --container-max: 1180px;
+  --section-pad: clamp(4rem, 3rem + 4vw, 7rem);
+
+  /* ---- Motion ---- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  /* Reserved for future dark-mode pass; app currently ships light-only,
+     so the marketing site intentionally matches it 1:1. */
+}

@@ -1,543 +1,532 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUser, saveUser } from "../services/db";
 import SwipeWrapper from "../components/SwipeWrapper";
 import Loader from "../components/Loader";
+import "./Profile.css";
+
+const SITES = [
+  {
+    name: "Ecommerce Site",
+    url: "https://siddreactapp1.netlify.app/",
+    description: "Explore an ecommerce website showcase.",
+    icon: "🛍️",
+  },
+  {
+    name: "Movie App",
+    url: "https://moviereactapp04.netlify.app/",
+    description: "Browse and search a movie database.",
+    icon: "🎬",
+  },
+];
 
 const Profile = () => {
   const navigate = useNavigate();
-  const fileInputRef = useRef(null);
-
   const uid = sessionStorage.getItem("uid");
+  const appLink = window.location.origin;
 
   const [user, setUser] = useState(null);
-  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [edit, setEdit] = useState({ name: "", email: "", phone: "" });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showSitesModal, setShowSitesModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [edit, setEdit] = useState({ name: "", email: "", phone: "" });
-  const [loading, setLoading] = useState(true);
+  const [notice, setNotice] = useState("");
 
   useEffect(() => {
-    if (!uid) {
-      navigate("/onboarding");
-      return;
-    }
+    let active = true;
 
-    const load = async () => {
-      const firebaseUser = await getUser(uid);
-
-      if (!firebaseUser) {
+    const loadProfile = async () => {
+      if (!uid) {
         navigate("/onboarding");
         return;
       }
 
-      setUser(firebaseUser);
-      setEdit({
-        name: firebaseUser.name || "",
-        email: firebaseUser.email || "",
-        phone: firebaseUser.phone || "",
-      });
+      try {
+        const firebaseUser = await getUser(uid);
+        if (!active) return;
 
-      setLoading(false);
+        if (!firebaseUser) {
+          navigate("/onboarding");
+          return;
+        }
+
+        setUser(firebaseUser);
+        setEdit({
+          name: firebaseUser.name || "",
+          email: firebaseUser.email || "",
+          phone: firebaseUser.phone || "",
+        });
+      } catch (error) {
+        console.error("Unable to load profile:", error);
+        if (active) setNotice("Unable to load your profile. Please refresh and try again.");
+      } finally {
+        if (active) setLoading(false);
+      }
     };
 
-    load();
+    loadProfile();
+    return () => {
+      active = false;
+    };
   }, [uid, navigate]);
+
+  useEffect(() => {
+    if (!showSitesModal && !showShareModal) return undefined;
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setShowSitesModal(false);
+        setShowShareModal(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [showSitesModal, showShareModal]);
+
+  const initials = useMemo(() => {
+    const name = user?.name?.trim();
+    if (!name) return "U";
+    return name
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part.charAt(0).toUpperCase())
+      .join("");
+  }, [user?.name]);
+
+  const saveProfile = async (event) => {
+    event.preventDefault();
+    if (!edit.name.trim()) {
+      setNotice("Please enter your name.");
+      return;
+    }
+
+    setSaving(true);
+    setNotice("");
+    const updatedProfile = {
+      name: edit.name.trim(),
+      email: edit.email.trim(),
+      phone: edit.phone.trim(),
+    };
+
+    try {
+      await saveUser(uid, updatedProfile);
+      setUser((currentUser) => ({ ...currentUser, ...updatedProfile }));
+      setEdit(updatedProfile);
+      setShowEditProfile(false);
+      setNotice("Your profile has been updated.");
+    } catch (error) {
+      console.error("Unable to save profile:", error);
+      setNotice("Could not save your changes. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const logout = () => {
+    sessionStorage.removeItem("uid");
+    navigate("/onboarding");
+  };
+
+  const shareMessage = `Check out this Expense Tracker app! Track your expenses, set budgets, and manage your finances easily. Try it now: ${appLink}`;
+
+  const shareViaWhatsApp = () => {
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(shareMessage)}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
+
+  const shareViaTelegram = () => {
+    window.open(
+      `https://t.me/share/url?url=${encodeURIComponent(appLink)}&text=${encodeURIComponent(
+        "Check out this Expense Tracker app!"
+      )}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(appLink);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = appLink;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+      }
+      setNotice("App link copied to clipboard.");
+    } catch (error) {
+      console.error("Unable to copy link:", error);
+      setNotice("Unable to copy the link. Please copy it manually.");
+    }
+  };
+
+  const shareViaEmail = () => {
+    const subject = "Check out this Expense Tracker App";
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
+      shareMessage
+    )}`;
+  };
+
+  const shareViaSMS = () => {
+    window.location.href = `sms:?body=${encodeURIComponent(shareMessage)}`;
+  };
 
   if (loading) {
     return (
       <SwipeWrapper>
-        <div className="min-vh-100 dashboard-bg d-flex justify-content-center align-items-center">
+        <div className="profile-loading dashboard-bg">
           <Loader />
         </div>
       </SwipeWrapper>
     );
   }
 
-  /* Save profile */
-  const saveProfile = async () => {
-    await saveUser(uid, edit);
-    setUser({ ...user, ...edit });
-    setShowEditProfile(false);
-  };
-
-  /* Logout */
-  const logout = () => {
-    sessionStorage.removeItem("uid");
-    navigate("/onboarding");
-  };
-
-  /* Sites list */
-  const sites = [
-    {
-      name: "Ecommerce Site",
-      url: "https://siddreactapp1.netlify.app/",
-      description: "Ecommerce Site showcase",
-    },
-   
-    {
-      name: "Movie App",
-      url: "https://moviereactapp04.netlify.app/",
-      description: "Movie database and search",
-    },
-  ];
-
-  const openSite = (url) => {
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
-
-  /* Share functionality */
-  const appLink = window.location.origin; // Gets current website URL
-  const shareMessage = `Check out this awesome Expense Tracker app! Track your expenses, set budgets, and manage your finances easily. Try it now: ${appLink}`;
-
-  const shareViaWhatsApp = () => {
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
-    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-  };
-
-  const shareViaTelegram = () => {
-    const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(appLink)}&text=${encodeURIComponent("Check out this Expense Tracker app!")}`;
-    window.open(telegramUrl, "_blank", "noopener,noreferrer");
-  };
-
-  const copyToClipboard = () => {
-    navigator.clipboard
-      .writeText(appLink)
-      .then(() => {
-        alert("Link copied to clipboard!");
-      })
-      .catch(() => {
-        // Fallback for older browsers
-        const textArea = document.createElement("textarea");
-        textArea.value = appLink;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textArea);
-        alert("Link copied to clipboard!");
-      });
-  };
-
-  const shareViaEmail = () => {
-    const subject = "Check out this Expense Tracker App";
-    const body = shareMessage;
-    const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailtoUrl;
-  };
-
-  const shareViaSMS = () => {
-    const smsUrl = `sms:?body=${encodeURIComponent(shareMessage)}`;
-    window.location.href = smsUrl;
-  };
-
-  return (
-    <>
+  if (!user) {
+    return (
       <SwipeWrapper>
-        <div className="min-vh-100 dashboard-bg">
-          <div
-            className="container py-4"
-            style={{ maxWidth: "720px", paddingBottom: "90px" }}
-          >
-            {/* Primary Color Section - 60% */}
-            <div
-              className="card p-3 mb-4 d-flex align-items-center flex-row"
-              style={{
-                background: "linear-gradient(135deg, #2563EB, #1E40AF)",
-                color: "white",
-                border: "none"
-              }}
-            >
-              <div
-                className="rounded-circle d-flex align-items-center justify-content-center"
-                style={{
-                  width: "72px",
-                  height: "72px",
-                  border: "3px solid rgba(255, 255, 255, 0.7)",
-                  cursor: "pointer",
-                  overflow: "hidden",
-                  background: "rgba(255, 255, 255, 0.2)",
-                }}
-              >
-                <span style={{ fontSize: "32px" }}>👤</span>
-              </div>
-
-              <div className="ms-3">
-                <h5 className="mb-0">{user.name}</h5>
-                <small style={{ opacity: 0.9 }}>{user.email}</small>
-              </div>
-            </div>
-
-            {/* Secondary/Neutral Section - 30% */}
-            {!showSettingsMenu && !showEditProfile ? (
-              <div className="card p-0">
-                <div
-                  className="p-3 border-bottom"
-                  style={{ 
-                    cursor: "pointer",
-                    borderBottom: "1px solid #e9ecef !important"
-                  }}
-                  onClick={() => setShowShareModal(true)}
-                >
-                  👍 Recommend to friends
-                </div>
-
-                <div
-                  className="p-3 border-bottom"
-                  style={{ 
-                    cursor: "pointer",
-                    borderBottom: "1px solid #e9ecef !important"
-                  }}
-                  onClick={() => setShowSettingsMenu(true)}
-                >
-                  ⚙️ Settings
-                </div>
-
-                <div
-                  className="p-3 border-bottom"
-                  style={{ 
-                    cursor: "pointer",
-                    borderBottom: "1px solid #e9ecef !important"
-                  }}
-                  onClick={() => setShowSitesModal(true)}
-                >
-                  🌐 Our Other Sites
-                </div>
-
-                {/* Accent Color - 10% */}
-                <div
-                  className="p-3"
-                  style={{ 
-                    cursor: "pointer",
-                    color: "var(--expense)"
-                  }}
-                  onClick={logout}
-                >
-                  🚪 Logout
-                </div>
-              </div>
-            ) : showSettingsMenu ? (
-              /* SETTINGS MENU */
-              <div className="card p-0">
-                <div
-                  className="p-3 border-bottom"
-                  style={{ 
-                    cursor: "pointer",
-                    borderBottom: "1px solid #e9ecef !important"
-                  }}
-                  onClick={() => {
-                    setShowSettingsMenu(false);
-                    setShowEditProfile(true);
-                  }}
-                >
-                  👤 Edit Profile
-                </div>
-
-                <div
-                  className="p-3 border-bottom"
-                  style={{ 
-                    cursor: "pointer",
-                    borderBottom: "1px solid #e9ecef !important"
-                  }}
-                  onClick={() => navigate("/currency")}
-                >
-                  💱 Currency
-                </div>
-
-                <div
-                  className="p-3 border-bottom"
-                  style={{ 
-                    cursor: "pointer",
-                    borderBottom: "1px solid #e9ecef !important"
-                  }}
-                  onClick={() => navigate("/category-budgets")}
-                >
-                  📊 Category Budgets
-                </div>
-
-                <div
-                  className="p-3"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => setShowSettingsMenu(false)}
-                >
-                  ↩️ Back
-                </div>
-              </div>
-            ) : (
-              /* EDIT PROFILE FORM */
-              <div className="card p-3">
-                <div
-                  className="d-flex align-items-center mb-3"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => {
-                    setShowEditProfile(false);
-                    setShowSettingsMenu(true);
-                  }}
-                >
-                  <span style={{ marginRight: "8px" }}>←</span>
-                  <h6 className="mb-0">Edit Profile</h6>
-                </div>
-
-                <input
-                  className="form-control mb-2"
-                  value={edit.name}
-                  onChange={(e) => setEdit({ ...edit, name: e.target.value })}
-                  placeholder="Name"
-                />
-
-                <input
-                  className="form-control mb-2"
-                  value={edit.email}
-                  onChange={(e) => setEdit({ ...edit, email: e.target.value })}
-                  placeholder="Email"
-                />
-
-                <input
-                  className="form-control mb-3"
-                  value={edit.phone}
-                  onChange={(e) => setEdit({ ...edit, phone: e.target.value })}
-                  placeholder="Phone"
-                />
-
-                {/* Accent Color - 10% */}
-                <button
-                  className="btn w-100 mb-2"
-                  onClick={saveProfile}
-                  style={{
-                    background: "var(--primary)",
-                    color: "white",
-                    border: "none"
-                  }}
-                >
-                  Save
-                </button>
-
-                <button
-                  className="btn btn-outline-secondary w-100"
-                  onClick={() => {
-                    setShowEditProfile(false);
-                    setShowSettingsMenu(true);
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
+        <div className="profile-page dashboard-bg">
+          <div className="profile-empty-state">
+            <span className="profile-empty-icon">👤</span>
+            <h2>Profile unavailable</h2>
+            <p>We could not find your account details.</p>
+            <button className="profile-btn profile-btn-primary" onClick={() => navigate("/onboarding")}>
+              Go to sign in
+            </button>
           </div>
         </div>
       </SwipeWrapper>
+    );
+  }
 
-      {/* Sites Modal */}
-      {showSitesModal && (
-        <div
-          className="modal-backdrop"
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(0,0,0,0.5)",
-            zIndex: 1050,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <div
-            className="modal-content"
-            style={{
-              backgroundColor: "white",
-              borderRadius: "12px",
-              width: "90%",
-              maxWidth: "500px",
-              maxHeight: "80vh",
-              overflowY: "auto",
-              padding: "20px",
-            }}
-          >
-            {/* Primary Color Header */}
-            <div
-              className="d-flex justify-content-between align-items-center mb-3 p-3 rounded-top"
-              style={{
-                background: "linear-gradient(135deg, #2563EB, #1E40AF)",
-                color: "white",
-                margin: "-20px -20px 20px -20px",
-              }}
-            >
-              <h5 className="mb-0">Our Other Sites</h5>
-              <button
-                className="btn-close btn-close-white"
-                onClick={() => setShowSitesModal(false)}
-                aria-label="Close"
-              ></button>
+  return (
+    <SwipeWrapper>
+      <main className="profile-page dashboard-bg">
+        <div className="profile-container">
+          <header className="profile-page-header">
+            <div>
+              <span className="profile-eyebrow">ACCOUNT</span>
+              <h1>Your profile</h1>
+              <p>Manage your personal details and app preferences.</p>
             </div>
+            <button
+              type="button"
+              className="profile-btn profile-btn-light profile-dashboard-btn"
+              onClick={() => navigate("/dashboard")}
+            >
+              <span aria-hidden="true">←</span> Back to dashboard
+            </button>
+          </header>
 
-            <p className="text-muted mb-4">
-              Check out our other applications. Click any site to open in a new
-              tab.
-            </p>
+          {notice && (
+            <div className="profile-notice" role="status">
+              <span>{notice}</span>
+              <button type="button" onClick={() => setNotice("")} aria-label="Dismiss message">
+                ×
+              </button>
+            </div>
+          )}
 
-            <div className="sites-list">
-              {sites.map((site, index) => (
-                <div
-                  key={index}
-                  className="card mb-3 border-0 shadow-sm"
-                  style={{ 
-                    cursor: "pointer",
-                    transition: "transform 0.2s",
-                    borderLeft: "4px solid var(--primary)"
-                  }}
-                  onClick={() => openSite(site.url)}
-                  onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
-                  onMouseOut={(e) => e.currentTarget.style.transform = "translateY(0)"}
+          <div className="profile-layout">
+            <aside className="profile-sidebar">
+              <section className="profile-identity-card">
+                <div className="profile-identity-top">
+                  <span className="profile-avatar" aria-label="Profile initials">
+                    {initials}
+                  </span>
+                  <span className="profile-account-label">PERSONAL ACCOUNT</span>
+                </div>
+                <h2>{user.name || "Your account"}</h2>
+                <p className="profile-user-email">{user.email || "No email added"}</p>
+                <button
+                  type="button"
+                  className="profile-btn profile-btn-primary profile-edit-identity"
+                  onClick={() => setShowEditProfile(true)}
                 >
-                  <div className="card-body">
-                    <h6 className="card-title mb-1" style={{ color: "var(--text-primary)" }}>
-                      {site.name}
-                    </h6>
-                    <p className="card-text text-muted small mb-2">
-                      {site.description}
-                    </p>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <small className="text-primary" style={{ color: "var(--primary)" }}>
-                        {site.url}
-                      </small>
-                      <span className="text-muted">↗</span>
-                    </div>
+                  <span aria-hidden="true">✎</span> Edit profile
+                </button>
+                <div className="profile-identity-divider" />
+                <div className="profile-detail-row">
+                  <span className="profile-detail-icon">✉</span>
+                  <div>
+                    <small>Email address</small>
+                    <strong>{user.email || "Not provided"}</strong>
                   </div>
                 </div>
+                <div className="profile-detail-row">
+                  <span className="profile-detail-icon">☎</span>
+                  <div>
+                    <small>Phone number</small>
+                    <strong>{user.phone || "Not provided"}</strong>
+                  </div>
+                </div>
+              </section>
+
+              <section className="profile-help-card">
+                <span className="profile-help-icon">💡</span>
+                <div>
+                  <h3>Stay in control</h3>
+                  <p>Keep your details up to date so your account information stays accurate.</p>
+                </div>
+              </section>
+            </aside>
+
+            <section className="profile-main-content">
+              {showEditProfile ? (
+                <section className="profile-panel profile-edit-panel">
+                  <div className="profile-panel-heading">
+                    <div>
+                      <span className="profile-eyebrow">PERSONAL INFORMATION</span>
+                      <h2>Edit your profile</h2>
+                      <p>Update the details associated with your account.</p>
+                    </div>
+                    <button
+                      type="button"
+                      className="profile-icon-btn"
+                      onClick={() => {
+                        setEdit({
+                          name: user.name || "",
+                          email: user.email || "",
+                          phone: user.phone || "",
+                        });
+                        setShowEditProfile(false);
+                      }}
+                      aria-label="Close edit profile"
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  <form onSubmit={saveProfile} className="profile-form">
+                    <label className="profile-field">
+                      <span>Full name</span>
+                      <input
+                        type="text"
+                        value={edit.name}
+                        onChange={(event) => setEdit({ ...edit, name: event.target.value })}
+                        placeholder="Enter your name"
+                        autoComplete="name"
+                        required
+                      />
+                    </label>
+                    <label className="profile-field">
+                      <span>Email address</span>
+                      <input
+                        type="email"
+                        value={edit.email}
+                        onChange={(event) => setEdit({ ...edit, email: event.target.value })}
+                        placeholder="you@example.com"
+                        autoComplete="email"
+                      />
+                    </label>
+                    <label className="profile-field">
+                      <span>Phone number</span>
+                      <input
+                        type="tel"
+                        value={edit.phone}
+                        onChange={(event) => setEdit({ ...edit, phone: event.target.value })}
+                        placeholder="Enter your phone number"
+                        autoComplete="tel"
+                      />
+                    </label>
+                    <div className="profile-form-actions">
+                      <button type="button" className="profile-btn profile-btn-light" onClick={() => {
+                        setEdit({
+                          name: user.name || "",
+                          email: user.email || "",
+                          phone: user.phone || "",
+                        });
+                        setShowEditProfile(false);
+                      }}>
+                        Cancel
+                      </button>
+                      <button type="submit" className="profile-btn profile-btn-primary" disabled={saving}>
+                        {saving ? "Saving..." : "Save changes"}
+                      </button>
+                    </div>
+                  </form>
+                </section>
+              ) : (
+                <>
+                  <section className="profile-panel">
+                    <div className="profile-panel-heading">
+                      <div>
+                        <span className="profile-eyebrow">PREFERENCES</span>
+                        <h2>Account settings</h2>
+                        <p>Manage how your expense tracker works for you.</p>
+                      </div>
+                    </div>
+
+                    <div className="profile-action-list">
+                      <button type="button" className="profile-action-row" onClick={() => setShowEditProfile(true)}>
+                        <span className="profile-action-icon profile-icon-blue">👤</span>
+                        <span className="profile-action-copy">
+                          <strong>Personal information</strong>
+                          <small>Update your name, email, and phone number</small>
+                        </span>
+                        <span className="profile-chevron" aria-hidden="true">›</span>
+                      </button>
+                      <button type="button" className="profile-action-row" onClick={() => navigate("/currency")}>
+                        <span className="profile-action-icon profile-icon-green">₹</span>
+                        <span className="profile-action-copy">
+                          <strong>Currency</strong>
+                          <small>Choose the currency used in your records</small>
+                        </span>
+                        <span className="profile-chevron" aria-hidden="true">›</span>
+                      </button>
+                      <button type="button" className="profile-action-row" onClick={() => navigate("/category-budgets")}>
+                        <span className="profile-action-icon profile-icon-purple">▦</span>
+                        <span className="profile-action-copy">
+                          <strong>Category budgets</strong>
+                          <small>Set spending limits for your categories</small>
+                        </span>
+                        <span className="profile-chevron" aria-hidden="true">›</span>
+                      </button>
+                    </div>
+                  </section>
+
+                  <section className="profile-panel profile-discover-panel">
+                    <div className="profile-panel-heading">
+                      <div>
+                        <span className="profile-eyebrow">MORE</span>
+                        <h2>Discover and share</h2>
+                        <p>Share the app or explore more projects.</p>
+                      </div>
+                    </div>
+                    <div className="profile-feature-grid">
+                      <button type="button" className="profile-feature-card" onClick={() => setShowShareModal(true)}>
+                        <span className="profile-feature-icon profile-icon-orange">↗</span>
+                        <strong>Recommend to friends</strong>
+                        <small>Share the app with people you know</small>
+                        <span className="profile-feature-link">Share app <span aria-hidden="true">→</span></span>
+                      </button>
+                      <button type="button" className="profile-feature-card" onClick={() => setShowSitesModal(true)}>
+                        <span className="profile-feature-icon profile-icon-teal">🌐</span>
+                        <strong>Our other projects</strong>
+                        <small>Explore more apps and websites</small>
+                        <span className="profile-feature-link">Explore projects <span aria-hidden="true">→</span></span>
+                      </button>
+                    </div>
+                  </section>
+
+                  <section className="profile-logout-row">
+                    <div>
+                      <strong>Sign out</strong>
+                      <small>Sign out of this account on this device.</small>
+                    </div>
+                    <button type="button" className="profile-btn profile-btn-danger-outline" onClick={logout}>
+                      <span aria-hidden="true">↪</span> Log out
+                    </button>
+                  </section>
+                </>
+              )}
+            </section>
+          </div>
+        </div>
+      </main>
+
+      {showSitesModal && (
+        <div className="profile-modal-backdrop" onMouseDown={() => setShowSitesModal(false)}>
+          <section
+            className="profile-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="profile-sites-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="profile-modal-header">
+              <div>
+                <span className="profile-eyebrow">MORE TO EXPLORE</span>
+                <h2 id="profile-sites-title">Our other projects</h2>
+              </div>
+              <button type="button" className="profile-icon-btn" onClick={() => setShowSitesModal(false)} aria-label="Close projects">
+                ×
+              </button>
+            </div>
+            <p className="profile-modal-description">Take a look at these other applications and projects.</p>
+            <div className="profile-sites-list">
+              {SITES.map((site) => (
+                <a
+                  className="profile-site-link"
+                  href={site.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  key={site.name}
+                >
+                  <span className="profile-site-icon">{site.icon}</span>
+                  <span className="profile-site-copy">
+                    <strong>{site.name}</strong>
+                    <small>{site.description}</small>
+                    <small className="profile-site-url">{site.url}</small>
+                  </span>
+                  <span className="profile-chevron" aria-hidden="true">↗</span>
+                </a>
               ))}
             </div>
-
-            <div className="mt-4 text-center">
-              <button
-                className="btn btn-outline-secondary"
-                onClick={() => setShowSitesModal(false)}
-              >
+            <div className="profile-modal-footer">
+              <button type="button" className="profile-btn profile-btn-light" onClick={() => setShowSitesModal(false)}>
                 Close
               </button>
             </div>
-          </div>
+          </section>
         </div>
       )}
 
-      {/* Share Modal */}
       {showShareModal && (
-        <div
-          className="modal-backdrop"
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(0,0,0,0.5)",
-            zIndex: 1050,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <div
-            className="modal-content"
-            style={{
-              backgroundColor: "white",
-              borderRadius: "12px",
-              width: "90%",
-              maxWidth: "500px",
-              maxHeight: "80vh",
-              overflowY: "auto",
-              padding: "20px",
-            }}
+        <div className="profile-modal-backdrop" onMouseDown={() => setShowShareModal(false)}>
+          <section
+            className="profile-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="profile-share-title"
+            onMouseDown={(event) => event.stopPropagation()}
           >
-            {/* Primary Color Header */}
-            <div
-              className="d-flex justify-content-between align-items-center mb-3 p-3 rounded-top"
-              style={{
-                background: "linear-gradient(135deg, #2563EB, #1E40AF)",
-                color: "white",
-                margin: "-20px -20px 20px -20px",
-              }}
-            >
-              <h5 className="mb-0">Share with Friends</h5>
-              <button
-                className="btn-close btn-close-white"
-                onClick={() => setShowShareModal(false)}
-                aria-label="Close"
-              ></button>
+            <div className="profile-modal-header">
+              <div>
+                <span className="profile-eyebrow">SPREAD THE WORD</span>
+                <h2 id="profile-share-title">Share with friends</h2>
+              </div>
+              <button type="button" className="profile-icon-btn" onClick={() => setShowShareModal(false)} aria-label="Close sharing options">
+                ×
+              </button>
             </div>
-
-            <p className="text-muted mb-4">
-              Help spread the word! Share this amazing Expense Tracker app with
-              your friends.
+            <p className="profile-modal-description">
+              Help friends keep track of their spending and manage their money.
             </p>
-
-            <div className="mb-4">
-              <label className="form-label mb-2">App Link:</label>
-              <div className="input-group">
-                <input
-                  type="text"
-                  className="form-control"
-                  value={appLink}
-                  readOnly
-                  style={{ fontFamily: "monospace", fontSize: "14px" }}
-                />
-                {/* Accent Color Button */}
-                <button
-                  className="btn"
-                  onClick={copyToClipboard}
-                  type="button"
-                  style={{
-                    background: "var(--primary)",
-                    color: "white",
-                    border: "none"
-                  }}
-                >
-                  📋 Copy
+            <label className="profile-field profile-share-field">
+              <span>App link</span>
+              <div className="profile-copy-field">
+                <input type="text" value={appLink} readOnly aria-label="App link" />
+                <button type="button" className="profile-btn profile-btn-primary" onClick={copyToClipboard}>
+                  Copy link
                 </button>
               </div>
-              <small className="text-muted mt-2 d-block">
-                Copy this link and share it anywhere
-              </small>
+            </label>
+            <div className="profile-share-options">
+              <button type="button" onClick={shareViaWhatsApp}><span>📱</span> WhatsApp</button>
+              <button type="button" onClick={shareViaTelegram}><span>✈️</span> Telegram</button>
+              <button type="button" onClick={shareViaEmail}><span>✉️</span> Email</button>
+              <button type="button" onClick={shareViaSMS}><span>💬</span> SMS</button>
             </div>
-
-            <h6 className="mb-3" style={{ color: "var(--text-primary)" }}>Share via:</h6>
-
-            <div className="row g-3 mb-4">
-              {[
-                { label: "WhatsApp", emoji: "📱", onClick: shareViaWhatsApp, color: "btn-outline-success" },
-                { label: "Telegram", emoji: "📨", onClick: shareViaTelegram, color: "btn-outline-primary" },
-                { label: "Email", emoji: "✉️", onClick: shareViaEmail, color: "btn-outline-secondary" },
-                { label: "SMS", emoji: "💬", onClick: shareViaSMS, color: "btn-outline-info" },
-              ].map((shareOption, index) => (
-                <div key={index} className="col-6">
-                  <button
-                    className={`btn ${shareOption.color} w-100 d-flex flex-column align-items-center py-3`}
-                    onClick={shareOption.onClick}
-                    style={{ height: "100%" }}
-                  >
-                    <span style={{ fontSize: "24px", marginBottom: "8px" }}>
-                      {shareOption.emoji}
-                    </span>
-                    <span>{shareOption.label}</span>
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-4 text-center">
-              <button
-                className="btn btn-outline-secondary"
-                onClick={() => setShowShareModal(false)}
-              >
+            <div className="profile-modal-footer">
+              <button type="button" className="profile-btn profile-btn-light" onClick={() => setShowShareModal(false)}>
                 Close
               </button>
             </div>
-          </div>
+          </section>
         </div>
       )}
-    </>
+    </SwipeWrapper>
   );
 };
 
