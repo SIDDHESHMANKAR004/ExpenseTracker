@@ -1,0 +1,117 @@
+.demo-mode-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 16px;
+  color: #eff6ff;
+  background: #10233f;
+  font: 600 12px/1.3 Inter, system-ui, sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.demo-mode-bar__badge {
+  padding: 4px 8px;
+  color: #bfdbfe;
+  border: 1px solid rgba(191, 219, 254, 0.38);
+  border-radius: 999px;
+}
+
+.demo-mode-bar button {
+  padding: 4px 9px;
+  color: #fff;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.demo-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.62);
+}
+
+.demo-dialog {
+  width: min(100%, 460px);
+  padding: 30px;
+  color: #172033;
+  background: #fff;
+  border: 1px solid #e5eaf2;
+  border-radius: 20px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.28);
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.demo-dialog__icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  background: #eff6ff;
+  border-radius: 14px;
+  font-size: 20px;
+}
+
+.demo-dialog__eyebrow {
+  margin: 18px 0 6px;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.demo-dialog h2 {
+  margin: 0;
+  font-size: 23px;
+  letter-spacing: -0.03em;
+}
+
+.demo-dialog > p:not(.demo-dialog__eyebrow) {
+  margin: 12px 0;
+  color: #64748b;
+  line-height: 1.55;
+}
+
+.demo-dialog ul {
+  display: grid;
+  gap: 7px;
+  margin: 16px 0 22px;
+  padding-left: 20px;
+  color: #334155;
+  font-size: 14px;
+}
+
+.demo-dialog__actions {
+  display: grid;
+  gap: 9px;
+}
+
+.demo-dialog__actions button {
+  min-height: 44px;
+  color: #fff;
+  background: #2563eb;
+  border: 1px solid #2563eb;
+  border-radius: 10px;
+  cursor: pointer;
+  font: 600 14px Inter, system-ui, sans-serif;
+}
+
+.demo-dialog__actions .demo-dialog__login {
+  color: #1d4ed8;
+  background: #fff;
+}
+
+.demo-dialog__actions .demo-dialog__continue {
+  color: #64748b;
+  background: transparent;
+  border-color: transparent;
+}

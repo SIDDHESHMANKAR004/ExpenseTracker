@@ -9,11 +9,13 @@ import {
   getBudgets,
   deleteCategory,
   getExpenses,
-} from "../services/db";
+} from "../services/appData";
 import Loader from "../components/Loader";
 import SwipeWrapper from "../components/SwipeWrapper";
 import { serverTimestamp } from "firebase/firestore";
 import { getSymbol } from "../utils/currency";
+import { useDemoMode } from "../hooks/useDemoMode";
+import { DEMO_DATA } from "../data/demoData";
 import "./AddExpense.css";
 
 const DEFAULT_CATEGORIES = [
@@ -39,6 +41,7 @@ const DEFAULT_CATEGORIES = [
 
 const AddExpense = () => {
   const navigate = useNavigate();
+  const { isDemo, requireSignIn } = useDemoMode();
   const pressTimer = useRef(null);
   const longPressTriggered = useRef(false);
   const successTimer = useRef(null);
@@ -64,7 +67,7 @@ const AddExpense = () => {
   const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
-    if (!uid) {
+    if (!uid && !isDemo) {
       navigate("/onboarding");
       return;
     }
@@ -104,7 +107,7 @@ const AddExpense = () => {
     };
 
     load();
-  }, [uid, navigate]);
+  }, [uid, navigate, isDemo]);
 
   useEffect(() => {
     if (!showAddCategoryModal) return undefined;
@@ -142,6 +145,10 @@ const AddExpense = () => {
   };
 
   const addCategory = () => {
+    if (isDemo) {
+      requireSignIn();
+      return;
+    }
     setModalError("");
     setNewCategory({ name: "", icon: "" });
     setShowAddCategoryModal(true);
@@ -149,6 +156,10 @@ const AddExpense = () => {
 
   const saveNewCategory = async (event) => {
     event.preventDefault();
+    if (isDemo) {
+      requireSignIn();
+      return;
+    }
     const name = newCategory.name.trim();
     const icon = newCategory.icon.trim();
 
@@ -179,6 +190,10 @@ const AddExpense = () => {
   };
 
   const startPress = (category) => {
+    if (isDemo && !category.locked) {
+      requireSignIn();
+      return;
+    }
     if (category.locked) return;
     clearTimeout(pressTimer.current);
     longPressTriggered.current = false;
@@ -217,6 +232,10 @@ const AddExpense = () => {
 
   const saveExpense = async (event) => {
     event.preventDefault();
+    if (isDemo) {
+      requireSignIn();
+      return;
+    }
     const amount = Number(expense.amount);
     if (!selectedCategory) {
       setFormError("Select a category before saving.");
@@ -250,6 +269,10 @@ const AddExpense = () => {
 
   const saveIncome = async (event) => {
     event.preventDefault();
+    if (isDemo) {
+      requireSignIn();
+      return;
+    }
     const amount = Number(income?.incomeAmount);
     if (!Number.isFinite(amount) || amount <= 0) {
       setFormError("Enter an income amount greater than zero.");
@@ -376,7 +399,7 @@ const AddExpense = () => {
               <div>
                 <span className="money-eyebrow">YOUR FINANCES</span>
                 <h1>Manage Your Money</h1>
-                <p>Track your income and expenses effortlessly.</p>
+                <p>{isDemo ? "Explore sample income and expenses. Editing is disabled in demo mode." : "Track your income and expenses effortlessly."}</p>
               </div>
               <div className="money-header__mark" aria-hidden="true">
                 ↗
@@ -445,15 +468,53 @@ const AddExpense = () => {
                 <button
                   className="money-category money-category--add"
                   onClick={addCategory}
+                  disabled={isDemo}
                   type="button"
                 >
                   <span className="money-category__add-icon" aria-hidden="true">
                     +
                   </span>
                   <span className="money-category__name">Add category</span>
-                  <span className="money-category__meta">Create your own</span>
+                  <span className="money-category__meta">{isDemo ? "Sign in to unlock" : "Create your own"}</span>
+                  {isDemo && <span aria-hidden="true">🔒</span>}
                 </button>
               </div>
+              {isDemo && (
+                <>
+                  <button
+                    className="money-button money-button--secondary"
+                    onClick={requireSignIn}
+                    type="button"
+                  >
+                    Sign in to add a category
+                  </button>
+                  <section className="money-section" aria-label="Sample transactions">
+                    <div className="money-section__heading">
+                      <div>
+                        <span className="money-step">DEMO DATA</span>
+                        <h2>Recent expenses</h2>
+                        <p>Sample transactions across your categories.</p>
+                      </div>
+                    </div>
+                    <ul className="finance-transactions">
+                      {expenses.map((entry) => (
+                        <li className="finance-transaction" key={entry.id}>
+                          <span className="finance-transaction__icon" aria-hidden="true">
+                            {categories.find((category) => category.name === entry.category)?.icon || "📦"}
+                          </span>
+                          <span className="finance-transaction__details">
+                            <strong>{entry.note || entry.category}</strong>
+                            <span>{entry.category} · {entry.date}</span>
+                          </span>
+                          <strong className="finance-transaction__amount">
+                            −{currencySymbol}{Number(entry.amount).toLocaleString("en-IN")}
+                          </strong>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                </>
+              )}
               {categories.some((category) => !category.locked) && (
                 <p className="money-longpress-hint">
                   Tip: press and hold a custom category to remove it.
@@ -503,6 +564,7 @@ const AddExpense = () => {
                     onChange={(event) =>
                       setExpense({ ...expense, amount: event.target.value })
                     }
+                    disabled={isDemo}
                     aria-describedby="expense-amount-hint"
                     required
                   />
@@ -524,6 +586,7 @@ const AddExpense = () => {
                       onChange={(event) =>
                         setExpense({ ...expense, date: event.target.value })
                       }
+                      disabled={isDemo}
                       required
                     />
                   </div>
@@ -540,6 +603,7 @@ const AddExpense = () => {
                       onChange={(event) =>
                         setExpense({ ...expense, note: event.target.value })
                       }
+                      disabled={isDemo}
                       maxLength={160}
                     />
                   </div>
@@ -560,6 +624,7 @@ const AddExpense = () => {
                     className="money-button money-button--primary"
                     disabled={
                       savingExpense ||
+                      isDemo ||
                       !expense.amount ||
                       Number(expense.amount) <= 0 ||
                       !expense.date
@@ -573,11 +638,20 @@ const AddExpense = () => {
                       </>
                     ) : (
                       <>
-                        Save Expense <span aria-hidden="true">→</span>
+                        {isDemo ? "🔒 Save Expense" : "Save Expense"} <span aria-hidden="true">→</span>
                       </>
                     )}
                   </button>
                 </div>
+                {isDemo && (
+                  <button
+                    className="money-button money-button--secondary"
+                    onClick={requireSignIn}
+                    type="button"
+                  >
+                    Sign in to add expenses
+                  </button>
+                )}
               </form>
             </section>
           )}
@@ -629,6 +703,7 @@ const AddExpense = () => {
                       onClick={() =>
                         setIncome({ ...income, incomeType: frequency })
                       }
+                      disabled={isDemo}
                       type="button"
                     >
                       {frequency.charAt(0).toUpperCase() + frequency.slice(1)}
@@ -651,6 +726,7 @@ const AddExpense = () => {
                     onChange={(event) =>
                       setIncome({ ...income, incomeAmount: event.target.value })
                     }
+                    disabled={isDemo}
                     required
                   />
                 </div>
@@ -658,6 +734,7 @@ const AddExpense = () => {
                   className="money-button money-button--primary money-income__save"
                   disabled={
                     savingIncome ||
+                    isDemo ||
                     !income.incomeAmount ||
                     Number(income.incomeAmount) <= 0
                   }
@@ -670,11 +747,44 @@ const AddExpense = () => {
                     </>
                   ) : (
                     <>
-                      Save Income <span aria-hidden="true">→</span>
+                      {isDemo ? "🔒 Save Income" : "Save Income"} <span aria-hidden="true">→</span>
                     </>
                   )}
                 </button>
+                {isDemo && (
+                  <button
+                    className="money-button money-button--secondary"
+                    onClick={requireSignIn}
+                    type="button"
+                  >
+                    Sign in to manage income
+                  </button>
+                )}
               </form>
+              {isDemo && (
+                <section className="money-section" aria-label="Sample income transactions">
+                  <div className="money-section__heading">
+                    <div>
+                      <span className="money-step">DEMO DATA</span>
+                      <h2>Recent income</h2>
+                    </div>
+                  </div>
+                  <ul className="finance-transactions">
+                    {DEMO_DATA.incomeTransactions.map((entry) => (
+                      <li className="finance-transaction" key={entry.id}>
+                        <span className="finance-transaction__icon" aria-hidden="true">↗</span>
+                        <span className="finance-transaction__details">
+                          <strong>{entry.note}</strong>
+                          <span>{entry.date}</span>
+                        </span>
+                        <strong className="finance-transaction__amount">
+                          +{currencySymbol}{Number(entry.amount).toLocaleString("en-IN")}
+                        </strong>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
             </section>
           )}
         </main>

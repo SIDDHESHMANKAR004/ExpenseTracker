@@ -1,4 +1,10 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
@@ -10,24 +16,28 @@ import AppLayout from "./components/AppLayout";
 import Currency from "./pages/Currency";
 import CategoryBudgets from "./pages/CategoryBudgets";
 import ScrollToTop from "./components/ScrollToTop";
+import { DemoModeProvider } from "./contexts/DemoModeProvider";
+import { useDemoMode } from "./hooks/useDemoMode";
 
-const App = () => {
+const HomeRoute = () => {
+  const { isDemo } = useDemoMode();
+  const location = useLocation();
   const isOnboarded = sessionStorage.getItem("uid");
 
+  if (isDemo || (isOnboarded && !location.state?.fromDemo)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <LandingPage />;
+};
+
+const App = () => {
   return (
     <BrowserRouter>
-      <ScrollToTop />
+      <DemoModeProvider>
+        <ScrollToTop />
 
-      <Routes>
-        {/* Public marketing homepage. Logged-in users skip straight to the
-            dashboard; everyone else sees the real landing page instead of
-            being bounced straight to onboarding. */}
-        <Route
-          path="/"
-          element={
-            isOnboarded ? <Navigate to="/dashboard" /> : <LandingPage />
-          }
-        />
+        <Routes>
+        <Route path="/" element={<HomeRoute />} />
 
         <Route path="/onboarding" element={<Onboarding />} />
 
@@ -100,7 +110,8 @@ const App = () => {
         />
 
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+        </Routes>
+      </DemoModeProvider>
     </BrowserRouter>
   );
 };

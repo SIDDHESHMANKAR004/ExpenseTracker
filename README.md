@@ -1,5 +1,16 @@
 # React + Vite
 
+## Explore demo
+
+Choose **Explore Demo** on the landing page to open the application with
+read-only sample financial data. Demo mode persists for the current browser
+tab and never reads or writes a user's Firestore records. Use **Exit demo** to
+return to the landing page; choose a sign-in or account-creation action when
+you want to use real account data.
+
+The demo-mode flag is a UI convenience, not an authorization boundary.
+Firestore security rules must continue to enforce access to private user data.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

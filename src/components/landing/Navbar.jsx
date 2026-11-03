@@ -8,7 +8,7 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="ledger-navbar">
+    <header className="ledger-navbar ">
       <div className="ledger-navbar__inner">
         <a href="#home" className="ledger-logo" onClick={() => setOpen(false)}>
           <span className="ledger-logo__mark">₹</span>

@@ -5,13 +5,15 @@ import {
   getBudgets,
   getExpenses,
   saveBudgets,
-} from "../services/db";
+} from "../services/appData";
+import { useDemoMode } from "../hooks/useDemoMode";
 import { getSymbol } from "../utils/currency";
 import Loader from "../components/Loader";
 import "./CategoryBudgets.css";
 
 const CategoryBudgets = () => {
   const navigate = useNavigate();
+  const { isDemo, requireSignIn } = useDemoMode();
   const [categories, setCategories] = useState([]);
   const [budgets, setBudgets] = useState({});
   const [drafts, setDrafts] = useState({});
@@ -25,7 +27,7 @@ const CategoryBudgets = () => {
   const symbol = getSymbol();
 
   useEffect(() => {
-    if (!uid) {
+    if (!uid && !isDemo) {
       navigate("/onboarding");
       return;
     }
@@ -59,7 +61,7 @@ const CategoryBudgets = () => {
     };
 
     loadData();
-  }, [uid, navigate]);
+  }, [uid, navigate, isDemo]);
 
   const spendingByCategory = useMemo(
     () =>
@@ -93,6 +95,10 @@ const CategoryBudgets = () => {
     }).format(Number(value) || 0)}`;
 
   const save = async (categoryName) => {
+    if (isDemo) {
+      requireSignIn();
+      return;
+    }
     if (!uid || savingCategory) return;
 
     const rawValue = drafts[categoryName];
@@ -243,7 +249,7 @@ const CategoryBudgets = () => {
               <span className="category-budgets__eyebrow">LIMITS & PROGRESS</span>
               <h2>Your categories</h2>
             </div>
-            <p>Changes are saved per category.</p>
+            <p>{isDemo ? "Explore sample budgets. Changes are disabled in demo mode." : "Changes are saved per category."}</p>
           </div>
 
           {categories.length === 0 ? (
@@ -292,7 +298,7 @@ const CategoryBudgets = () => {
                         className={`category-budget-card__status category-budget-card__status--${state}`}
                       >
                         {exceeded
-                          ? "Limit reached"
+                          ? "Over budget"
                           : nearLimit
                             ? "Nearly there"
                             : hasLimit
@@ -325,6 +331,14 @@ const CategoryBudgets = () => {
                         {hasLimit ? "Limit" : "Budget"}
                         <strong>{hasLimit ? formatMoney(limit) : "Not set"}</strong>
                       </span>
+                      {hasLimit && (
+                        <span>
+                          {exceeded ? "Over budget by" : "Remaining"}
+                          <strong>
+                            {formatMoney(exceeded ? spent - limit : limit - spent)}
+                          </strong>
+                        </span>
+                      )}
                     </div>
 
                     <div className="category-budget-card__editor">
@@ -349,13 +363,13 @@ const CategoryBudgets = () => {
                               }));
                               setNotice("");
                             }}
-                            disabled={Boolean(savingCategory)}
+                            disabled={Boolean(savingCategory) || isDemo}
                           />
                         </div>
                         <button
                           className="category-budgets__save"
                           onClick={() => save(category.name)}
-                          disabled={Boolean(savingCategory)}
+                          disabled={Boolean(savingCategory) || isDemo}
                           type="button"
                         >
                           {savingCategory === category.name
@@ -363,8 +377,19 @@ const CategoryBudgets = () => {
                             : "Save"}
                         </button>
                       </div>
-                      <small>Leave empty or enter 0 to remove the limit.</small>
+                      <small>
+                        {isDemo ? "Sign in to unlock budget editing." : "Leave empty or enter 0 to remove the limit."}
+                      </small>
                     </div>
+                    {isDemo && (
+                      <button
+                        className="category-budgets__save"
+                        onClick={requireSignIn}
+                        type="button"
+                      >
+                        🔒 Sign in to edit
+                      </button>
+                    )}
                   </article>
                 );
               })}

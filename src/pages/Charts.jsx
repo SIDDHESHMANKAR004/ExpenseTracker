@@ -17,7 +17,9 @@ import {
 import { Bar, Doughnut, Line, PolarArea } from "react-chartjs-2";
 import SwipeWrapper from "../components/SwipeWrapper";
 import { getSymbol } from "../utils/currency";
-import { getUser, getExpenses } from "../services/db";
+import { getUser, getExpenses } from "../services/appData";
+import { useDemoMode } from "../hooks/useDemoMode";
+import { DEMO_DATA } from "../data/demoData";
 import Loader from "../components/Loader";
 import { haptic } from "../utils/haptics";
 import "./Charts.css";
@@ -94,6 +96,7 @@ const formatDate = (date) => {
 
 const Charts = () => {
   const navigate = useNavigate();
+  const { isDemo } = useDemoMode();
   const symbol = getSymbol();
   const [loading, setLoading] = useState(true);
   const chartRef = useRef(null);
@@ -105,7 +108,7 @@ const Charts = () => {
   const uid = sessionStorage.getItem("uid");
 
   useEffect(() => {
-    if (!uid) {
+    if (!uid && !isDemo) {
       navigate("/onboarding");
       return;
     }
@@ -125,7 +128,7 @@ const Charts = () => {
     };
 
     load();
-  }, [uid, navigate]);
+  }, [uid, navigate, isDemo]);
 
   const income = safeAmount(user?.incomeAmount);
   const totalSpent = useMemo(
@@ -466,6 +469,49 @@ const Charts = () => {
     },
   };
 
+  const monthlySummaryData = {
+    labels: DEMO_DATA.monthlySummaries.map((summary) => summary.label),
+    datasets: [
+      {
+        label: "Income",
+        data: DEMO_DATA.monthlySummaries.map((summary) => summary.income),
+        backgroundColor: "#0f9d74",
+        borderRadius: 6,
+      },
+      {
+        label: "Expenses",
+        data: DEMO_DATA.monthlySummaries.map((summary) => summary.expenses),
+        backgroundColor: "#e8524b",
+        borderRadius: 6,
+      },
+      {
+        label: "Savings",
+        data: DEMO_DATA.monthlySummaries.map((summary) => summary.savings),
+        backgroundColor: "#2563eb",
+        borderRadius: 6,
+      },
+    ],
+  };
+  const monthlySummaryOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: "bottom" },
+      tooltip: {
+        callbacks: {
+          label: (context) => ` ${context.dataset.label}: ${formatMoney(context.raw)}`,
+        },
+      },
+    },
+    scales: {
+      x: { grid: { display: false } },
+      y: {
+        beginAtZero: true,
+        ticks: { callback: (value) => `${symbol}${value}` },
+      },
+    },
+  };
+
   const handleResetZoom = () => {
     setSelectedSlice(null);
     setZoomedIn(false);
@@ -639,6 +685,20 @@ const Charts = () => {
               </div>
             </article>
           </section>
+
+          {isDemo && (
+            <section className="analytics-card analytics-panel analytics-panel--timeline">
+              <div className="analytics-panel__header">
+                <div>
+                  <h2>Monthly financial summary</h2>
+                  <p>Income, expenses, and savings over the last six months</p>
+                </div>
+              </div>
+              <div className="analytics-timeline">
+                <Bar data={monthlySummaryData} options={monthlySummaryOptions} />
+              </div>
+            </section>
+          )}
 
           {timeline.length >= 2 && (
             <section className="analytics-card analytics-panel analytics-panel--timeline">

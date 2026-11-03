@@ -4,6 +4,7 @@ import { HiOutlineArrowRight, HiOutlinePlay } from 'react-icons/hi';
 import { HiOutlineExclamationTriangle } from 'react-icons/hi2';
 import { Link } from 'react-router-dom';
 import { HERO_STATS } from '../../data/landingData';
+import { useDemoMode } from '../../hooks/useDemoMode';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 18 },
@@ -22,6 +23,8 @@ const rows = [
 ];
 
 export default function Hero() {
+  const { enterDemo } = useDemoMode();
+
   return (
     <section id="home" className="ledger-hero">
       <div className="ledger-container ledger-hero__grid">
@@ -44,9 +47,9 @@ export default function Hero() {
             <Link to="/onboarding" className="btn-ledger btn-ledger--primary">
               Get Started <HiOutlineArrowRight />
             </Link>
-            <a href="#dashboard" className="btn-ledger btn-ledger--ghost">
+            <button type="button" onClick={enterDemo} className="btn-ledger btn-ledger--ghost">
               <HiOutlinePlay /> Explore Demo
-            </a>
+            </button>
           </motion.div>
 
           <motion.div variants={fadeUp} initial="hidden" animate="show" custom={4} className="ledger-hero__stats">

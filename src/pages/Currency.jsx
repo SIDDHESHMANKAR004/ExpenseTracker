@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCurrency, saveCurrency } from "../services/db";
+import { getCurrency, saveCurrency } from "../services/appData";
+import { useDemoMode } from "../hooks/useDemoMode";
 import Loader from "../components/Loader";
 
 const Currency = () => {
   const navigate = useNavigate();
-  const [selectedCurrency, setSelectedCurrency] = useState("USD");
+  const { isDemo, requireSignIn } = useDemoMode();
+  const [selectedCurrency, setSelectedCurrency] = useState("INR");
   const [loading, setLoading] = useState(true);
 
   const uid = sessionStorage.getItem("uid");
 
   useEffect(() => {
-    if (!uid) {
+    if (!uid && !isDemo) {
       navigate("/onboarding");
       return;
     }
@@ -23,9 +25,13 @@ const Currency = () => {
     };
 
     loadCurrency();
-  }, [uid, navigate]);
+  }, [uid, navigate, isDemo]);
 
   const handleSave = async () => {
+    if (isDemo) {
+      requireSignIn();
+      return;
+    }
     if (!uid) return;
     
     await saveCurrency(uid, selectedCurrency);
@@ -57,6 +63,7 @@ const Currency = () => {
             className="form-select"
             value={selectedCurrency}
             onChange={(e) => setSelectedCurrency(e.target.value)}
+            disabled={isDemo}
           >
             {currencies.map((currency) => (
               <option key={currency.code} value={currency.code}>
@@ -76,9 +83,14 @@ const Currency = () => {
           </div>
         </div>
 
-        <button className="btn btn-primary w-100 mb-2" onClick={handleSave}>
-          Save Currency
+        <button className="btn btn-primary w-100 mb-2" onClick={handleSave} disabled={isDemo}>
+          {isDemo ? "🔒 Save Currency" : "Save Currency"}
         </button>
+        {isDemo && (
+          <button className="btn btn-outline-primary w-100 mb-2" onClick={requireSignIn}>
+            Sign in to change currency
+          </button>
+        )}
         
         <button className="btn btn-outline-secondary w-100" onClick={() => navigate(-1)}>
           Cancel

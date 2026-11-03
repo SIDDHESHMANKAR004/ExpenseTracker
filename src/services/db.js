@@ -9,11 +9,20 @@ import {
   getDocs,
   deleteDoc,
 } from "firebase/firestore";
+import { isDemoMode } from "../utils/demoMode";
+
+const assertWritesAllowed = () => {
+  if (isDemoMode()) {
+    throw new Error("Writes are disabled while exploring demo mode.");
+  }
+};
 
 /* ================= USERS ================= */
 
-export const saveUser = (uid, data) =>
-  setDoc(doc(db, "users", uid), data, { merge: true });
+export const saveUser = (uid, data) => {
+  assertWritesAllowed();
+  return setDoc(doc(db, "users", uid), data, { merge: true });
+};
 
 export const getUser = async (uid) => {
   const snap = await getDoc(doc(db, "users", uid));
@@ -22,8 +31,10 @@ export const getUser = async (uid) => {
 
 /* ================= EXPENSES ================= */
 
-export const addExpense = (uid, expense) =>
-  addDoc(collection(db, "users", uid, "expenses"), expense);
+export const addExpense = (uid, expense) => {
+  assertWritesAllowed();
+  return addDoc(collection(db, "users", uid, "expenses"), expense);
+};
 
 
 export const getExpenses = async (uid) => {
@@ -40,8 +51,10 @@ export const getExpenses = async (uid) => {
   }));
 };
 
-export const deleteExpense = (uid, id) =>
-  deleteDoc(doc(db, "users", uid, "expenses", id));
+export const deleteExpense = (uid, id) => {
+  assertWritesAllowed();
+  return deleteDoc(doc(db, "users", uid, "expenses", id));
+};
 
 /* ================= CATEGORIES ================= */
 
@@ -50,10 +63,13 @@ export const getCategories = async (uid) => {
   return snap.exists() ? snap.data().list : null;
 };
 
-export const saveCategories = (uid, list) =>
-  setDoc(doc(db, "users", uid, "meta", "categories"), { list });
+export const saveCategories = (uid, list) => {
+  assertWritesAllowed();
+  return setDoc(doc(db, "users", uid, "meta", "categories"), { list });
+};
 
 export const deleteCategory = async (uid, name) => {
+  assertWritesAllowed();
   const cats = await getCategories(uid);
   if (!cats) return;
 
@@ -68,22 +84,26 @@ export const getBudgets = async (uid) => {
   return snap.exists() ? snap.data() : {};
 };
 
-export const saveBudgets = (uid, budgets) =>
-  setDoc(doc(db, "users", uid, "meta", "budgets"), budgets);
+export const saveBudgets = (uid, budgets) => {
+  assertWritesAllowed();
+  return setDoc(doc(db, "users", uid, "meta", "budgets"), budgets);
+};
 
 /* ================= CURRENCY ================= */
 
 export const getCurrency = async (uid) => {
   const snap = await getDoc(doc(db, "users", uid, "meta", "currency"));
-  return snap.exists() ? snap.data().currency : "INR"; // Default to USD
+  return snap.exists() ? snap.data().currency : "INR";
 };
 
-export const saveCurrency = (uid, currency) =>
-  setDoc(
+export const saveCurrency = (uid, currency) => {
+  assertWritesAllowed();
+  return setDoc(
     doc(db, "users", uid, "meta", "currency"),
     { currency },
     { merge: true },
   );
+};
 
 /* ================= COMPLETE USER META DATA ================= */
 
@@ -101,6 +121,7 @@ export const getUserMeta = async (uid) => {
 };
 
 export const saveUserMeta = (uid, data) => {
+  assertWritesAllowed();
   const safe = { ...data };
   delete safe.incomeAmount;
   delete safe.incomeType;

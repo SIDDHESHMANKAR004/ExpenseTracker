@@ -14,7 +14,9 @@ import {
 import { Doughnut, Line } from "react-chartjs-2";
 import { getSymbol } from "../utils/currency";
 import { shouldWarnIncome, getHighestCategory } from "../utils/budget";
-import { getUser, getExpenses } from "../services/db";
+import { getUser, getExpenses } from "../services/appData";
+import { useDemoMode } from "../hooks/useDemoMode";
+import { DEMO_DATA } from "../data/demoData";
 import Loader from "../components/Loader";
 import "./Dashboard.css";
 
@@ -71,12 +73,13 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
+  const { isDemo } = useDemoMode();
   const symbol = getSymbol();
   const uid = sessionStorage.getItem("uid");
 
   /* LOAD FIREBASE DATA */
   useEffect(() => {
-    if (!uid) {
+    if (!uid && !isDemo) {
       navigate("/onboarding");
       return;
     }
@@ -91,7 +94,7 @@ const Dashboard = () => {
     };
 
     loadData();
-  }, [uid, navigate]);
+  }, [uid, navigate, isDemo]);
 
   const totalExpense = expenses.reduce((s, e) => s + Number(e.amount), 0);
   const income = Number(user?.incomeAmount || 0);
@@ -162,6 +165,12 @@ const Dashboard = () => {
   const categoryEntries = Object.entries(categoryTotals).sort(
     ([, firstAmount], [, secondAmount]) => secondAmount - firstAmount,
   );
+  const demoBudgetAlerts = Object.entries(DEMO_DATA.budgets).filter(
+    ([category, budget]) => {
+      const spent = categoryTotals[category] || 0;
+      return spent / budget >= 0.75;
+    },
+  ).length;
 
   const css = getComputedStyle(document.documentElement);
   const cssColor = (name, fallback) =>
@@ -274,6 +283,9 @@ const Dashboard = () => {
               </h1>
               <p className="finance-dashboard__subtitle">
                 Here's your financial overview.
+                {isDemo && (
+                  <span> {DEMO_DATA.categories.length} categories · {demoBudgetAlerts} budget alerts</span>
+                )}
               </p>
             </div>
             <button

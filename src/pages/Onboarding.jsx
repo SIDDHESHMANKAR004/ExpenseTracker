@@ -26,7 +26,11 @@ import "./Onboarding.css";
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const [mode, setMode] = useState("login");
+  const [mode, setMode] = useState(
+    new URLSearchParams(window.location.search).get("mode") === "signup"
+      ? "signup"
+      : "login",
+  );
   const [showPassword, setShowPassword] = useState(false);
 
   const [form, setForm] = useState({
@@ -42,6 +46,7 @@ const Onboarding = () => {
   /* ---------- Google Login ---------- */
 
   const loginGoogle = async () => {
+    sessionStorage.removeItem("uid");
     const provider = new GoogleAuthProvider();
     const res = await signInWithPopup(auth, provider);
 
@@ -52,6 +57,7 @@ const Onboarding = () => {
       incomeType: "monthly",
     });
 
+    sessionStorage.removeItem("appMode");
     sessionStorage.setItem("uid", res.user.uid);
     navigate("/dashboard");
   };
@@ -59,6 +65,7 @@ const Onboarding = () => {
   /* ---------- Signup ---------- */
 
   const signup = async () => {
+    sessionStorage.removeItem("uid");
     const { name, email, phone, password } = form;
     if (!name || !email || !password) return alert("Fill required fields");
 
@@ -80,11 +87,13 @@ const Onboarding = () => {
   /* ---------- Login ---------- */
 
   const login = async () => {
+    sessionStorage.removeItem("uid");
     const { email, password } = form;
     if (!email || !password) return alert("Enter credentials");
 
     const res = await signInWithEmailAndPassword(auth, email, password);
 
+    sessionStorage.setItem("uid", res.user.uid);
     sessionStorage.setItem("uid", res.user.uid);
     navigate("/dashboard");
   };

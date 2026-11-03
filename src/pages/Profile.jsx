@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getUser, saveUser } from "../services/db";
+import { getUser, saveUser } from "../services/appData";
+import { useDemoMode } from "../hooks/useDemoMode";
 import SwipeWrapper from "../components/SwipeWrapper";
 import Loader from "../components/Loader";
 import "./Profile.css";
@@ -22,6 +23,7 @@ const SITES = [
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { isDemo, requireSignIn, exitDemo } = useDemoMode();
   const uid = sessionStorage.getItem("uid");
   const appLink = window.location.origin;
 
@@ -38,7 +40,7 @@ const Profile = () => {
     let active = true;
 
     const loadProfile = async () => {
-      if (!uid) {
+      if (!uid && !isDemo) {
         navigate("/onboarding");
         return;
       }
@@ -70,7 +72,7 @@ const Profile = () => {
     return () => {
       active = false;
     };
-  }, [uid, navigate]);
+  }, [uid, navigate, isDemo]);
 
   useEffect(() => {
     if (!showSitesModal && !showShareModal) return undefined;
@@ -98,6 +100,10 @@ const Profile = () => {
 
   const saveProfile = async (event) => {
     event.preventDefault();
+    if (isDemo) {
+      requireSignIn();
+      return;
+    }
     if (!edit.name.trim()) {
       setNotice("Please enter your name.");
       return;
@@ -126,6 +132,10 @@ const Profile = () => {
   };
 
   const logout = () => {
+    if (isDemo) {
+      exitDemo();
+      return;
+    }
     sessionStorage.removeItem("uid");
     navigate("/onboarding");
   };
@@ -251,10 +261,11 @@ const Profile = () => {
                 <button
                   type="button"
                   className="profile-btn profile-btn-primary profile-edit-identity"
-                  onClick={() => setShowEditProfile(true)}
+                  onClick={() => (isDemo ? requireSignIn() : setShowEditProfile(true))}
                 >
-                  <span aria-hidden="true">✎</span> Edit profile
+                  <span aria-hidden="true">✎</span> Edit profile{isDemo ? " 🔒" : ""}
                 </button>
+                {isDemo && <small className="profile-demo-hint">Sign in to edit your profile.</small>}
                 <div className="profile-identity-divider" />
                 <div className="profile-detail-row">
                   <span className="profile-detail-icon">✉</span>
@@ -368,11 +379,11 @@ const Profile = () => {
                     </div>
 
                     <div className="profile-action-list">
-                      <button type="button" className="profile-action-row" onClick={() => setShowEditProfile(true)}>
+                      <button type="button" className="profile-action-row" onClick={() => (isDemo ? requireSignIn() : setShowEditProfile(true))}>
                         <span className="profile-action-icon profile-icon-blue">👤</span>
                         <span className="profile-action-copy">
                           <strong>Personal information</strong>
-                          <small>Update your name, email, and phone number</small>
+                          <small>{isDemo ? "Sign in to update your details" : "Update your name, email, and phone number"}</small>
                         </span>
                         <span className="profile-chevron" aria-hidden="true">›</span>
                       </button>
@@ -421,11 +432,11 @@ const Profile = () => {
 
                   <section className="profile-logout-row">
                     <div>
-                      <strong>Sign out</strong>
-                      <small>Sign out of this account on this device.</small>
+                      <strong>{isDemo ? "Exit demo" : "Sign out"}</strong>
+                      <small>{isDemo ? "Return to the MoneyVerge landing page." : "Sign out of this account on this device."}</small>
                     </div>
                     <button type="button" className="profile-btn profile-btn-danger-outline" onClick={logout}>
-                      <span aria-hidden="true">↪</span> Log out
+                      <span aria-hidden="true">↪</span> {isDemo ? "Exit demo" : "Log out"}
                     </button>
                   </section>
                 </>

@@ -1,3 +1,5 @@
+import { isDemoMode } from "./demoMode";
+
 export const currencyMap = {
   INR: "₹",
   USD: "$",
@@ -7,6 +9,7 @@ export const currencyMap = {
 };
 
 export const getCurrency = () => {
+  if (isDemoMode()) return "INR";
   return localStorage.getItem("currency") || "INR";
 };
 
