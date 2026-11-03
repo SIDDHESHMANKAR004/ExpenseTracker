@@ -8,7 +8,7 @@ export default function ResponsiveShowcase() {
       <div className="ledger-container">
         <span className="section-eyebrow">One app, every screen</span>
         <h2 className="section-heading">Responsive experience</h2>
-        <p className="section-lede">The same ledger, resized — not redesigned — for whatever you're holding.</p>
+        <p className="section-lede">The same MoneyVerge, resized — not redesigned — for whatever you're holding.</p>
 
         <div className="responsive-grid">
           {RESPONSIVE_SCREENSHOTS.map((screenshot) => (

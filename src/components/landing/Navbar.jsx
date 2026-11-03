@@ -12,7 +12,7 @@ export default function Navbar() {
       <div className="ledger-navbar__inner">
         <a href="#home" className="ledger-logo" onClick={() => setOpen(false)}>
           <span className="ledger-logo__mark">₹</span>
-          Ledger
+          MoneyVerge
         </a>
 
         <nav className="ledger-navlinks ledger-navlinks--desktop" aria-label="Primary">

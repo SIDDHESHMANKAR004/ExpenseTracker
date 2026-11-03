@@ -10,7 +10,7 @@ export default function Footer() {
           <div className="footer-col">
             <div className="ledger-logo" style={{ marginBottom: '0.8rem' }}>
               <span className="ledger-logo__mark">₹</span>
-              Ledger
+              MoneyVerge
             </div>
             <p style={{ maxWidth: '32ch', fontSize: '0.85rem' }}>
               A personal expense tracker with a dashboard, budgets, analytics, and reports built in.
@@ -33,7 +33,7 @@ export default function Footer() {
         </div>
 
         <div className="footer-bottom">
-          <span>© {new Date().getFullYear()} Ledger. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} MoneyVerge. All rights reserved.</span>
           <div className="footer-socials">
             <a href="#" aria-label="GitHub"><FaGithub /></a>
             <a href="#" aria-label="LinkedIn"><FaLinkedin /></a>

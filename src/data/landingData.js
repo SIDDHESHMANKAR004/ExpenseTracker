@@ -60,7 +60,7 @@ export const FEATURE_SECTIONS = [
     id: 'analytics',
     eyebrow: 'Page 03 — Analytics',
     title: 'Visual Analytics',
-    lede: 'Numbers on a dashboard tell you what happened. Charts tell you why. Analytics turns your ledger into patterns you can act on.',
+    lede: 'Numbers on a dashboard tell you what happened. Charts tell you why. Analytics turns your MoneyVerge into patterns you can act on.',
     points: [
       'Interactive doughnut chart of spending',
       'Category-by-category breakdown',
@@ -200,7 +200,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: 'Is my financial data secure?',
-    a: 'Data is stored in Firebase Firestore behind your authenticated account, so only you can access your ledger.',
+    a: 'Data is stored in Firebase Firestore behind your authenticated account, so only you can access your MoneyVerge.',
   },
   {
     q: 'Does it work on mobile?',
@@ -213,7 +213,6 @@ export const FOOTER_LINKS = {
     { label: 'Dashboard', href: '#dashboard' },
     { label: 'Expense Manager', href: '#expense-manager' },
     { label: 'Analytics', href: '#analytics' },
-    { label: 'Reports', href: '#reports' },
     { label: 'Profile', href: '#profile' },
   ],
   company: [

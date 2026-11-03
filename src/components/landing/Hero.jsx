@@ -31,7 +31,7 @@ export default function Hero() {
           </motion.div>
 
           <motion.h1 variants={fadeUp} initial="hidden" animate="show" custom={1}>
-            Your money, kept like <em>a real ledger</em>.
+            Your money, kept like <em>a real MoneyVerge</em>.
           </motion.h1>
 
           <motion.p variants={fadeUp} initial="hidden" animate="show" custom={2} className="ledger-hero__sub">
